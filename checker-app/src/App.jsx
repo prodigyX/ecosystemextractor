@@ -159,7 +159,6 @@ export default function App() {
         setFileName(file.name)
         setChecking(false)
         setProgress({ done: 0, total: 0 })
-        xDomainCache = null
       } catch {
         setParseError('Invalid JSON — could not parse the file.')
       }

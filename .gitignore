@@ -8,5 +8,3 @@ dist/
 checker-app/node_modules/
 checker-app/dist/
 
-# embedded repo — track separately if needed
-ecosystemextractor/

@@ -170,7 +170,7 @@ body {
 
 /* ── Table ── */
 .table-wrap {
-  overflow-x: auto;
+  overflow-x: clip;
   border-radius: 12px;
   border: 1px solid #1e293b;
 }
@@ -195,6 +195,10 @@ th {
   color: #64748b;
   border-bottom: 1px solid #1e293b;
   white-space: nowrap;
+  position: sticky;
+  top: 0;
+  background: #141920;
+  z-index: 1;
 }
 
 td {

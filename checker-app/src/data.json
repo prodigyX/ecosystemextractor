@@ -1,0 +1,1493 @@
+[
+    {
+        "id": "9c641631-4d80-4311-a421-775e3f77ec82",
+        "name": "BakerDAO",
+        "slogan": "Let's get this BREAD",
+        "short_description": "BakerDAO combines token economics, collateralized lending, leverage, and PoL into one ecosystem.",
+        "long_description": "BakerDAO combines token economics, collateralized lending, leverage, and Proof-of-Liquidity into a single cohesive financial ecosystem.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1756820976558-BakerDAO.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1756820981245-bakerdao-banner.png",
+        "fallback_text": null,
+        "external_url": "https://www.bakerdao.io/",
+        "about_us": "# What is BakerDAO?\n\nBakerDAO combines token economics, collateralized lending, leverage, and Proof-of-Liquidity into a single cohesive financial ecosystem. The $BREAD token features a mathematically-enforced upward price trajectory, backed by $BERA tokens.\n\nHere's a quick explainer of Baker DAO:\n\n- Users bake $BREAD by depositing $BERA\n- Users can burn $BREAD, to redeem $BERA\n- Users can take $BERA loans against their $BREAD at 99% LTV and access leverage\n- There will be whitelisted pre-deposit vaults for users to deposit $BERA, and mint $BREAD at the same price as other depositors in same vault\n- The baking and burning bonding curve ensures that $BREAD always rises against $BERA regardless of user behaviour\n- The initial supply of $BREAD will be determined by how much $BERA is deposited in the pre-deposit vaults. The initial max cap of $BREAD will be 6.9 million. After that, the supply will be dynamic and the cap is adjusted each week.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-09-02T13:54:09.002Z",
+        "categories": [
+            {
+                "id": "f88a6693-176d-4c95-b28f-70c67db21733",
+                "name": "DeFi",
+                "slug": "defi",
+                "title": "Essential DeFi Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "b9ff2d6d-6f1d-4628-bef5-a311d52d9606",
+                "app_id": "9c641631-4d80-4311-a421-775e3f77ec82",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1756820988699-bakerdao-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "8ef45b85-4e88-4a29-ae41-44faed487a02",
+                "app_id": "9c641631-4d80-4311-a421-775e3f77ec82",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1756820988569-bakerdao-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "ac340ea6-5894-4920-8f3e-131b98cf6041",
+                "app_id": "9c641631-4d80-4311-a421-775e3f77ec82",
+                "platform": "twitter",
+                "url": "https://x.com/BakerDAO420"
+            }
+        ]
+    },
+    {
+        "id": "25de4007-c02b-433f-9b2c-7b12d633c749",
+        "name": "Underground Waifus",
+        "slogan": "The Ultimate NFT Card Game",
+        "short_description": "The world's first TCG that integrates the revolutionary Proof-of-Liquidity (PoL) system at its core",
+        "long_description": "The world's first TCG that integrates the revolutionary Proof-of-Liquidity (PoL) system at its core",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1756820710432-underground-waifus.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1756820716481-underground-waifus-banner.png",
+        "fallback_text": null,
+        "external_url": "https://undergroundwaifus.com/",
+        "about_us": "# What is Underground Waifus?\n\nThe world's first TCG that integrates the revolutionary Proof-of-Liquidity (PoL) system at its core: Underground Waifus, a multiplayer TCG (Trading Card Game) based on a cyberpunk universe, focused on a very specific vertical: Waifus in a post-apocalyptic future. \n\n\nOne of the main sources of innovation is that it proposes a circular economy model that combines F2P (Free to Play) and P&E (play and earn) business models with the tokenized economy.\n\n\nIn this innovative TCG, you don't just collect powerful cards, build decks, and compete against other players; you also have the opportunity to become an integral part of the network on which the game is built.\n\n\nThe universe of Underground Waifus takes place in the future, corrupted by the scarcity of materials, money: stardust, and the desire for power. An eternal war between different races and more than 9 factions. \n\n\nThe TCG is focused on a competitive side, with an easy player-driven economy: PVP (player vs. player) battles, and the player who wins takes it all. \n\n\nThe use of blockchain technology and assets in fungible or non-fungible tokens (NFT) empower the concept of TCG and digital collecting, with a limited supply of collections and future new limited collections on the different known blockchains that are annexed to the project. \n\n\nPlayers are the holders of the assets, either for mere collecting or playing, and can generate value for their invested time. \n\n\nWelcome to the first TCG on Berachain, with no barriers to entry and hybrid F2P and P2E for all players!",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-09-02T13:45:34.438Z",
+        "categories": [
+            {
+                "id": "7a86757e-e756-4380-ba65-e448424c9c1c",
+                "name": "Gaming",
+                "slug": "gaming",
+                "title": "Your Favorite Games"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "a51b9abf-2da6-4e03-93a2-e7c846f9f854",
+                "app_id": "25de4007-c02b-433f-9b2c-7b12d633c749",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1756820722052-underground-waifus-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "b75a46ac-fc58-47de-86d9-ebe2fad24d14",
+                "app_id": "25de4007-c02b-433f-9b2c-7b12d633c749",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1756820722339-underground-waifus-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "a198763f-33bf-4cae-a713-5c31651dcfba",
+                "app_id": "25de4007-c02b-433f-9b2c-7b12d633c749",
+                "platform": "twitter",
+                "url": "https://x.com/UnderWaifusTCG"
+            }
+        ]
+    },
+    {
+        "id": "e36db5c4-1eae-43e2-bb87-b5d680b05b0e",
+        "name": "Honeypot",
+        "slogan": "Multi-Chain Liquidity Hub",
+        "short_description": "Multi-Chain Liquidity Hub for the Future Token Economy 🍯 ",
+        "long_description": "Multi-Chain Liquidity Hub for the Future Token Economy 🍯 ",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1753946753508-Honeypot.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1753946781534-Honeypot-banner.png",
+        "fallback_text": null,
+        "external_url": "https://honeypotfinance.xyz/",
+        "about_us": "# What is Honeypot Finance?\n\nHoneypot Finance acts as a Proof-of-Liquidity (PoL) Accelerator that unites Dreampad, a fair launchpad, and Pot2pump, a meme launchpad designed to launch meme coins into concentrated liquidity pools, which are automatically managed and optimized by an Automated Liquidity Manager (ALM).\n\nDreampad supports our innovative Fair Token Offering (FTO) model and both Fjord Foundry's LBP and Fixed Price Sales to ensure successful and sustainable token launches for projects.\n\nPot2Pump is a meme launchpad that combines a liquidity-focused meme model with fair launch mechanisms during the pre-DEX phase like Daos.fun. Early participants join as liquidity providers (LPs), forming an LP army like on Meteora that ensures optimal concentrated liquidity management through the ALM.\n\nPOT-WASABEE DEX is tailored for memecoins and long-tail asset enthusiasts, offering a distinctive meme-focused approach, enriched incentives, and a user-friendly experience.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-31T07:27:16.332Z",
+        "categories": [
+            {
+                "id": "f88a6693-176d-4c95-b28f-70c67db21733",
+                "name": "DeFi",
+                "slug": "defi",
+                "title": "Essential DeFi Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "8376e8ec-b309-4a6d-80d4-851edcd7b218",
+                "app_id": "e36db5c4-1eae-43e2-bb87-b5d680b05b0e",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1753946767114-Honeypot-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "917d79e8-c301-4a44-8580-079b4c3bd25f",
+                "app_id": "e36db5c4-1eae-43e2-bb87-b5d680b05b0e",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1753946766974-Honeypot-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "50255c10-4dc3-4e95-89d9-66d8cd0162ec",
+                "app_id": "e36db5c4-1eae-43e2-bb87-b5d680b05b0e",
+                "platform": "twitter",
+                "url": "https://x.com/honeypotfinance"
+            }
+        ]
+    },
+    {
+        "id": "204eefc6-570b-49b2-8378-d41e8872bd8a",
+        "name": "Miso",
+        "slogan": "Effortless yield with Miso",
+        "short_description": "PoL-based yield made simple and composable for retail",
+        "long_description": "PoL-based yield made simple and composable for retail",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1753081175136-Miso.png",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1753081181463-Miso-Banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://app.miso.money/",
+        "about_us": "# What is Miso?\nWelcome to Miso – the yield infrastructure for Berachain, designed to make yield effortless, composable, and scalable for the next wave of users.\n\nMiso offers a user-friendly interface that abstracts the complexities of Berachain's Proof of Liquidity (PoL), allowing anyone to access Berachain-native yield without active management, rebalancing, and manual compounding. Yield should be this effortless: Just deposit and earn.\n\n# Vision & Principles\nWe're building a yield layer that enables anyone to earn without friction, strategies are abstracted, and yield just works.\n\n✨ Risk-minimized: Delta-neutral yield strategies with no liquidation risks or minimal impermanent loss\n\n↗️ Hassle-free Convenience: Auto-compound with no active management\n\n⚙️ Composability Prioritized: Unlock productive optionality for developers and advanced DeFi users\n\n🧙🏻‍♂️ Beginner-friendly: User experience is meticulously designed for simplicity\n\n🔒 Continual Investment in Security: Audits and bounties to ensure funds deposited are secure\n\n🐻 Ecosystem-aligned: Positively contributing to Berachain's governance and meta-governance\n\nWith Miso, yield becomes Berachain's killer app. Stop yield farming. Start yield owning.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-21T07:00:47.662Z",
+        "categories": [
+            {
+                "id": "f88a6693-176d-4c95-b28f-70c67db21733",
+                "name": "DeFi",
+                "slug": "defi",
+                "title": "Essential DeFi Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "d1172933-1534-4e07-97a7-b92b5530b32f",
+                "app_id": "204eefc6-570b-49b2-8378-d41e8872bd8a",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1753081191507-Miso-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "fdd36196-e78f-4919-9380-cfa751d87c1a",
+                "app_id": "204eefc6-570b-49b2-8378-d41e8872bd8a",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1753081191546-Miso-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "580ff882-0010-4e3e-a249-11ebc0bba9ec",
+                "app_id": "204eefc6-570b-49b2-8378-d41e8872bd8a",
+                "platform": "twitter",
+                "url": "https://x.com/misodotmoney"
+            }
+        ]
+    },
+    {
+        "id": "95715821-5a99-478b-9be3-1d92f71d31ef",
+        "name": "Beramonium",
+        "slogan": "Redefining Web3 Gaming",
+        "short_description": "Beramonium Chronicles is a single-player RPG, playable traditionally or as Play and Earn.",
+        "long_description": "Beramonium Chronicles is a single-player RPG that can be played in a traditional way or as Play and Earn",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1752688270289-Beramonium.png",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1752688280785-Beramonium-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://beramonium.io/",
+        "about_us": "# What is Beramonium?\n\nOur mission is to build a Web3 game that is accessible to all gamers, regardless of their level of experience with crypto. Beramonium Chronicles is a single-player RPG that can be played in a traditional way or as Play and Earn, where players have the option to mint items looted in the game as NFTs. We leave it up to the players whether they choose to participate in this player-driven economy or not.\n\nWe believe that GameFi and crypto gaming will be the future, and we want to drive crypto adoption by creating a great game that can be enjoyed by true gamers. Our approach is to prioritize player choice and accessibility while also incorporating the latest advancements in the crypto space.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-16T17:54:24.413Z",
+        "categories": [
+            {
+                "id": "7a86757e-e756-4380-ba65-e448424c9c1c",
+                "name": "Gaming",
+                "slug": "gaming",
+                "title": "Your Favorite Games"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "fcdc30d4-4a8c-4eb5-a04e-5fc6e41d950d",
+                "app_id": "95715821-5a99-478b-9be3-1d92f71d31ef",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1752688292125-Beramonium-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "053d2870-303d-4989-a723-463359fe4ac8",
+                "app_id": "95715821-5a99-478b-9be3-1d92f71d31ef",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1752688291991-Beramonium-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "8b558244-93f3-41da-ba29-399e88f35fa2",
+                "app_id": "95715821-5a99-478b-9be3-1d92f71d31ef",
+                "platform": "twitter",
+                "url": "https://x.com/Beramonium"
+            }
+        ]
+    },
+    {
+        "id": "3984ecee-2856-4611-9325-58e6c8cfe74f",
+        "name": "Beratown",
+        "slogan": "Ever wish berachain felt… simpler?",
+        "short_description": "Beratown lets you engage with the entire Berachain DeFi ecosystem through one interface.",
+        "long_description": "Beratown is designed from the ground up to let you engage with the entire Berachain DeFi ecosystem through one interface. ",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1752687424906-Beratown.png",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1752687435074-Beratown-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://beratown.dapdap.net/",
+        "about_us": "# What is Beratown?\n\nWelcome to Beratown, your single access point for everything Berachain!\n\nBeratown is designed from the ground up to let you engage with the entire Berachain DeFi ecosystem through one interface. \n\nThe town serves as your go-to place for swapping, lending, and earning yields across Berachain.\n\nNo more complexity. Just instant access.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-16T17:37:48.140Z",
+        "categories": [
+            {
+                "id": "44a69c4a-336c-4097-b1e6-c1cf1dac8e5e",
+                "name": "Consumer",
+                "slug": "consumer",
+                "title": "Your Daily Consumer Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "bf699aa3-0d65-4391-bcc4-ddf8871b31bb",
+                "app_id": "3984ecee-2856-4611-9325-58e6c8cfe74f",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1752687454829-Beratown-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "7e47375c-ff8f-4253-bb3a-059f0a0c2e47",
+                "app_id": "3984ecee-2856-4611-9325-58e6c8cfe74f",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1752687454928-Beratown-ss-2-1.jpg",
+                "order_index": 1
+            },
+            {
+                "id": "60ec6547-5509-4b4b-b0f7-0b6ee15386a8",
+                "app_id": "3984ecee-2856-4611-9325-58e6c8cfe74f",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1752687454669-Beratown-ss-2.jpg",
+                "order_index": 2
+            }
+        ],
+        "socials": [
+            {
+                "id": "6a8daacf-9aeb-48ef-bed5-8fe5e0704b2b",
+                "app_id": "3984ecee-2856-4611-9325-58e6c8cfe74f",
+                "platform": "twitter",
+                "url": "https://x.com/0xberatown"
+            }
+        ]
+    },
+    {
+        "id": "a3372a88-359f-42dc-9501-8dff4512d281",
+        "name": "Stablehold",
+        "slogan": "The Horse Hedge Fund ",
+        "short_description": "Stablehold revolutionizes the $177B horse industry, allowing on-chain investments in racehorses.",
+        "long_description": "Stablehold revolutionizes the $177B horse industry by enabling on-chain investments in racehorses. Earn yields from winnings, sponsorships, and breeding with top trainers and firms.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1752209377738-stablehold.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1752209386449-stablehold-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://stablehold.io/",
+        "about_us": "# What is Stablehold?\n\nStablehold is revolutionizing the $177 billion global horse industry. For the first time, anyone can invest in the lucrative world of racehorses on-chain, earning yields from race winnings, sponsorships, and breeding operations. With established partnerships with world-class trainers and renowned breeding firms, Stablehold provides everything users need at their fingertips.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-11T04:53:41.396Z",
+        "categories": [
+            {
+                "id": "44a69c4a-336c-4097-b1e6-c1cf1dac8e5e",
+                "name": "Consumer",
+                "slug": "consumer",
+                "title": "Your Daily Consumer Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "0f884027-5f5d-44a8-872a-a1a6e7440cf9",
+                "app_id": "a3372a88-359f-42dc-9501-8dff4512d281",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1752209398331-Stablehold-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "24fd315e-f7de-454c-b377-1d3361a219a9",
+                "app_id": "a3372a88-359f-42dc-9501-8dff4512d281",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1752209397996-Stablehold-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "5fa1dd7e-cc30-47e6-b5a5-137c2f14ce71",
+                "app_id": "a3372a88-359f-42dc-9501-8dff4512d281",
+                "platform": "twitter",
+                "url": "https://x.com/stablehold"
+            }
+        ]
+    },
+    {
+        "id": "92e92abb-36ae-4a5b-83b4-a738c0243873",
+        "name": "Jiko",
+        "slogan": "Yugioh meets DeFi",
+        "short_description": "Jiko is a yield optimizer powering a PvP idle card game.",
+        "long_description": "Jiko is a yield optimizer powering a PvP idle card game.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1753339449426-jiko.png",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1752000872592-jiko-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://app.beraji.com/",
+        "about_us": "# What is Jiko\n\nJiko is a yield optimizer powering a PvP idle card game. With single-staked pools, we maximize yields via POL on Berachain, making finance fun and profitable.\n\nJiko is offering users the option to engage through two distinct paths:\n\nGame Route – For those who enjoy the thrill of gameplay and earning through in-game mechanics.\n\nDeFi Route – For users who prefer a more DeFi experience, combining staking, yield farming, and capital optimization with a competitive twist.\n\nIt’s the first NFT staking game on Berachain, merging Liquid Staking + CDP + PvP—and turning engagement into real value.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-08T18:56:42.508Z",
+        "categories": [
+            {
+                "id": "7a86757e-e756-4380-ba65-e448424c9c1c",
+                "name": "Gaming",
+                "slug": "gaming",
+                "title": "Your Favorite Games"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "dded857f-f994-4824-9a0f-0926e086bf7a",
+                "app_id": "92e92abb-36ae-4a5b-83b4-a738c0243873",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1752000880445-jiko-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "5e79700c-dc79-44f5-b25f-80821658ca5f",
+                "app_id": "92e92abb-36ae-4a5b-83b4-a738c0243873",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1752000880856-jiko-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "a2e315c0-ebad-483a-b074-ab17357ae45a",
+                "app_id": "92e92abb-36ae-4a5b-83b4-a738c0243873",
+                "platform": "twitter",
+                "url": "https://x.com/jikofunfinance"
+            }
+        ]
+    },
+    {
+        "id": "129a107e-4ca2-460c-bc3d-5be770eb57ec",
+        "name": "BULL ISH",
+        "slogan": "Cookie clicker with a yield twist.",
+        "short_description": "An exclusive minigame for BULLAS NFT holders and other smoove brains",
+        "long_description": "An exclusive minigame for BULLAS NFT holders and other smoove brains",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1752000370153-bull ish v2.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1752000374889-bulla-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://game.bullas.xyz/",
+        "about_us": "# What is BULL ISH?\nAre you sure you want to know?\n\nBULL ISH is an exclusive minigame for BULLAS NFT holders, incorporating a unique blend of NFT utility, farming mechanics and violence that is only possible in the Berachain ecosystem. \n\nThe game connects to the greater Beradrome ponzi ecosystem via an exclusive Plugin that allows Bullas NFT holders special access to a novel grotesque excuse for a game. Add in access to sweet sweet BGT emissions and you've got yourself some serious incentives to spank.\n\nPlayers will have to make strategic decisions as they farm MOOLA, using it to upgrade their MOOLA mining power to increase their access to oBERO and BGT emissions (pending Foundation approval) while in the Breadline. Think long and hard about these decisions, they'll dictate your efficiency as you beat off other players...\n\nBULL ISH is the first in a new era of Web3 games that have deeper integration with Berachain’s ecosystem incentives via Beradrome.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-08T18:48:02.036Z",
+        "categories": [
+            {
+                "id": "7a86757e-e756-4380-ba65-e448424c9c1c",
+                "name": "Gaming",
+                "slug": "gaming",
+                "title": "Your Favorite Games"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "8ab091f3-66d3-43ef-a9e8-49c8dd322149",
+                "app_id": "129a107e-4ca2-460c-bc3d-5be770eb57ec",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1752000383257-Bullish-ss-2.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "e933fad5-c419-42d8-9581-777509bd2628",
+                "app_id": "129a107e-4ca2-460c-bc3d-5be770eb57ec",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1752000389521-Bullish-ss-3.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "f2795c0d-583d-4ee9-b7b7-91a2b65cdd66",
+                "app_id": "129a107e-4ca2-460c-bc3d-5be770eb57ec",
+                "platform": "twitter",
+                "url": "https://x.com/TheBullas_"
+            }
+        ]
+    },
+    {
+        "id": "18078be9-b3af-4e59-9369-ccb932789d1a",
+        "name": "Beradrome",
+        "slogan": "Restaking and Liquidity Marketplace",
+        "short_description": "Beradrome is Berachain's top restaking and liquidity marketplace, uniting key DeFi features.",
+        "long_description": "Beradrome is Berachain's leading restaking and liquidity marketplace, merging top DeFi features into one powerhouse. It enables ve(3,3) for all yield-bearing assets on the Berachain network.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1752000203288-beradrome.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1752000220242-Beradrome-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://www.beradrome.com/",
+        "about_us": "# What is Beradrome?\n\nBeradrome is Berachain’s native restaking & liquidity marketplace, enabling ecosystem projects to build deeper liquidity for less, liquidation free HONEY loans and a flywheel boosted by its Berachain validator set.\n\nThe platform introduces an innovative token structure, encompassing BERO, hiBERO, and oBERO tokens, each presenting users with diverse advantages and motivations. The supply of BERO tokens is algorithmically controlled via a bonding curve mechanism, ensuring a stable foundation for BERO tokens while providing liquidity at market-driven rates.\n\nKey Features: An all-encompassing Solidly System with a fresh token configuration. Extension points to seamlessly incorporate any yield-generating asset into the ecosystem. BERO, equivalent to Solidity’s SOLID , is disbursed through the Beradrome Bonding Curve, consistently backed by HONEY, and its price maintains a level of ≥ 1 HONEY/BERO. hiBERO, analogous to veSOLID, involves staking BERO to acquire hiBERO. The previous 4-year locking mechanism is removed.  Staking is only in effect during active voting periods, and resetting votes to 0 enables withdrawal back to BERO – hiBERO serves as the governing power token - oBERO: Functions as a call option for BERO at the designated base price (1 HONEY/BERO). These are issued to gauges as incentives for liquidity, dependent on hiBERO votes. hiBERO garners swap fees from the Beradrome Bonding Curve, accrues oBERO, earns BGT once Berachain foundation has whitelisted it, and collects voting fees from endorsed gauges. \n\n- Leverage borrowing against hiBERO without concerns of interest or liquidation risks. \n\n- 1 BERO consistently allows borrowing up to the value of nearly 1 HONEY.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-08T18:44:18.818Z",
+        "categories": [
+            {
+                "id": "f88a6693-176d-4c95-b28f-70c67db21733",
+                "name": "DeFi",
+                "slug": "defi",
+                "title": "Essential DeFi Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "83fe1fe3-760b-4db0-b8b7-030580783929",
+                "app_id": "18078be9-b3af-4e59-9369-ccb932789d1a",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1752000227238-Beradrome-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "3e0364a8-3624-4942-9427-a02e6cb83153",
+                "app_id": "18078be9-b3af-4e59-9369-ccb932789d1a",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1752000227033-Beradrome-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "241f3b96-71d5-4db4-89ca-876bfb9e837c",
+                "app_id": "18078be9-b3af-4e59-9369-ccb932789d1a",
+                "platform": "twitter",
+                "url": "https://x.com/beradrome"
+            }
+        ]
+    },
+    {
+        "id": "6c8390f3-96b1-48b2-868c-b4ef3322d9b2",
+        "name": "Kettle",
+        "slogan": "Trade Luxury Authentically",
+        "short_description": "Discover exceptional timepieces, backed by the confidence of the Kettle Authenticity Guarantee.",
+        "long_description": "Discover exceptional timepieces, backed by the confidence of the Kettle Authenticity Guarantee.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751999502737-kettle.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751999508582-kettle-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://kettle.shop/",
+        "about_us": "# What is Kettle?\n\nKettle's mission is to create an unprecedented standard of trust & transparency in the luxury watch industry. At Kettle, they employ a fully transparent “show, don’t tell” approach to everything they do. They want customers to have not a shred of doubt about the piece they are purchasing.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-08T18:33:37.246Z",
+        "categories": [
+            {
+                "id": "44a69c4a-336c-4097-b1e6-c1cf1dac8e5e",
+                "name": "Consumer",
+                "slug": "consumer",
+                "title": "Your Daily Consumer Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "529b8396-ec43-4b40-89bf-2a9c05744719",
+                "app_id": "6c8390f3-96b1-48b2-868c-b4ef3322d9b2",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1752002869467-kettle-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "684ce898-5948-45cb-9209-544d1bc35198",
+                "app_id": "6c8390f3-96b1-48b2-868c-b4ef3322d9b2",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1752002869374-kettle-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "098904a6-8a13-4442-833d-75c16110da7f",
+                "app_id": "6c8390f3-96b1-48b2-868c-b4ef3322d9b2",
+                "platform": "twitter",
+                "url": "https://x.com/kettle_shop"
+            }
+        ]
+    },
+    {
+        "id": "48977078-d50b-4749-8024-ff3c94f2dddb",
+        "name": "Ultra Violet",
+        "slogan": "The future of money, beyond the visible",
+        "short_description": "UltraViolet, a primitive built on top of Infrared, the leading BGT derivative protocol on Berachain",
+        "long_description": "UltraViolet, a primitive built on top of Infrared, the leading BGT derivative protocol on Berachain",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751999106404-uv.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751999112473-uv-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://uvmoney.xyz/",
+        "about_us": "# What is Ultraviolet?\n\nUltraViolet, a primitive built on top of Infrared, the leading BGT derivative protocol on Berachain, aims to provide a suite of new instruments that stems from the monetary premium between $BGT and $BERA enabling users to earn from the yield coming through Proof of Liquidity mechanics via a variety of instruments known as Ultraviolet assets initially through $uvPREM, a bribe-backed floating asset, while directing monetary emissions to $uvBERA, a value-pegged $BERA stablecoin. ",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-08T18:27:11.950Z",
+        "categories": [
+            {
+                "id": "f88a6693-176d-4c95-b28f-70c67db21733",
+                "name": "DeFi",
+                "slug": "defi",
+                "title": "Essential DeFi Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "fe0e831f-1f5e-4a88-ae88-277c50a3cbbe",
+                "app_id": "48977078-d50b-4749-8024-ff3c94f2dddb",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751999118412-uv-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "adf6aad9-8a1c-4c92-947f-6b0230d724c9",
+                "app_id": "48977078-d50b-4749-8024-ff3c94f2dddb",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751999119585-uv-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "8f12583f-1a55-4b63-bab1-6cca8328f71e",
+                "app_id": "48977078-d50b-4749-8024-ff3c94f2dddb",
+                "platform": "twitter",
+                "url": "https://x.com/UV_Money"
+            }
+        ]
+    },
+    {
+        "id": "8bc1094e-7f4a-4e9f-b359-e7f3af7a8910",
+        "name": "MadHoney",
+        "slogan": "Perps on anything ",
+        "short_description": "MadHoney is the main leverage hub on Berachain, where degens thrive and the bears run wild. ",
+        "long_description": "MadHoney is the main leverage hub on Berachain, where degens thrive and the bears run wild. ",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751998255231-MadHoney.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751998263093-MadHoney-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://madhoney.fi/",
+        "about_us": "# What is MadHoney?\n\nMadHoney is the main leverage hub on Berachain, where degens thrive and the bears run wild. Whether you're here to explore the chaos, dive into the honey-fueled utilities, or simply learn how to navigate the madness, this documentation has you covered. 🍯",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-08T18:12:44.314Z",
+        "categories": [
+            {
+                "id": "f88a6693-176d-4c95-b28f-70c67db21733",
+                "name": "DeFi",
+                "slug": "defi",
+                "title": "Essential DeFi Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "73fcafd5-908b-4d13-a1d0-02625405493a",
+                "app_id": "8bc1094e-7f4a-4e9f-b359-e7f3af7a8910",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751998276382-MadHoney-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "23ba486c-480b-4186-9a47-65237446e925",
+                "app_id": "8bc1094e-7f4a-4e9f-b359-e7f3af7a8910",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751998275262-MadHoney-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "3d22a01c-c2f3-497e-8e78-500d3c367831",
+                "app_id": "8bc1094e-7f4a-4e9f-b359-e7f3af7a8910",
+                "platform": "twitter",
+                "url": "https://x.com/Madhoneyfi"
+            }
+        ]
+    },
+    {
+        "id": "0dd1b0af-e714-4b0e-8273-4e47d5db293c",
+        "name": "Burve",
+        "slogan": "LP Rehypothecation and Omni-pool swaps",
+        "short_description": "A Multi-Swap spectacle you've never seen before.",
+        "long_description": "A Multi-Swap spectacle you've never seen before.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751997859024-burve.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751998089793-burve-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://burve.fi/",
+        "about_us": "# What is Burve?\nBurve is the highest earning stableswap anywhere with its next-gen multi-pools and rehypothecation. Here's how to get started in 3 steps.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-08T18:06:43.382Z",
+        "categories": [
+            {
+                "id": "f88a6693-176d-4c95-b28f-70c67db21733",
+                "name": "DeFi",
+                "slug": "defi",
+                "title": "Essential DeFi Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "90f41c3e-4298-449d-b63e-7f95ad0a65b6",
+                "app_id": "0dd1b0af-e714-4b0e-8273-4e47d5db293c",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751997885667-Burve-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "52153cd6-05fb-405d-b84d-4b03f222a7e3",
+                "app_id": "0dd1b0af-e714-4b0e-8273-4e47d5db293c",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751997883629-Burve-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "f30f6b8a-a878-488e-b2b6-75a4678f3236",
+                "app_id": "0dd1b0af-e714-4b0e-8273-4e47d5db293c",
+                "platform": "twitter",
+                "url": "https://x.com/Burve_fi"
+            }
+        ]
+    },
+    {
+        "id": "b2389ff8-077a-4d95-a23f-69503518c94d",
+        "name": "Kuma",
+        "slogan": "Proof-of-Liquidity Perpetuals DEX",
+        "short_description": "Kuma is a high-performance decentralized perpetual swaps exchange.",
+        "long_description": "Kuma is a high-performance decentralized perpetual swaps exchange.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751994073263-Kuma.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751994086036-kuma-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://kuma.bid/",
+        "about_us": "# Introduction to Kuma\nKuma is a high-performance decentralized perpetual swaps exchange. Kuma's hybrid design combines an off-chain order book, matching and liquidation engine with on-chain custody and settlement. This approach combines the speed and efficiency of traditional trading systems with the transparency and security of blockchain technology to create an unparalleled trading experience.\n\nKuma operates on XCHAIN, an Kuma specific Arbitrum Orbit layer 2. XCHAIN's performance support gas free and nearly instant settlement of all Kuma transactions. Positions on Kuma are collateralized by USDC bridged into XCHAIN from Berachain via Stargate .\n\nKuma is built for all traders, providing instant execution, millisecond latency, and gas-free settlement, while allowing users to maintain full control and custody of funds.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-08T17:03:59.836Z",
+        "categories": [
+            {
+                "id": "f88a6693-176d-4c95-b28f-70c67db21733",
+                "name": "DeFi",
+                "slug": "defi",
+                "title": "Essential DeFi Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "d18a398f-9c6e-4f16-bae0-a8e802878b6f",
+                "app_id": "b2389ff8-077a-4d95-a23f-69503518c94d",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751994186859-Kuma-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "2aaa0c0e-fe34-43b5-a6a0-b27f49fae869",
+                "app_id": "b2389ff8-077a-4d95-a23f-69503518c94d",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751994217584-Kuma-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "5f44bc97-f49b-4c3d-9891-c963ce687ceb",
+                "app_id": "b2389ff8-077a-4d95-a23f-69503518c94d",
+                "platform": "twitter",
+                "url": "https://x.com/kumadotbid"
+            }
+        ]
+    },
+    {
+        "id": "3cb34018-0fe5-4741-8e1a-cf473e881ba9",
+        "name": "Ramen",
+        "slogan": "Launchpad for Berachain",
+        "short_description": "Ramen is the Berachain token launchpad for liquidity bootstrapping and price discovery.",
+        "long_description": "Ramen is the Berachain-native token launchpad powering liquidity bootstrapping and price discovery for new assets.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751976154917-ramen.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751976259222-ramen-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://ramen.finance/",
+        "about_us": "# What is Ramen? \n\nRamen is the Berachain-native token launchpad powering liquidity bootstrapping and price discovery for new assets. We democratize equitable access for users to participate in liquidity bootstrapping events by early-stage and growth-stage protocols on Berachain.  \n\n# Core Product Features\nFixed Price Launches\nProvably fair allocation distribution mechanism: Lottery-based allocation distribution with Gacha, an off-chain points system earned linearly with gRAMEN\n\nMaximum flexibility in structure: Flexibility to configure launch phases with allocation caps \n\nMinimal user friction: Fixed-price format easy for users to understand and participate\n\nPrice Discovery Launches\nFairness and efficiency prioritized: Blind auction mechanism prevents price manipulation, excessive FOMO, and frontrunning\n\nMarket-driven price discovery: Verifiable on-chain price discovery for token, driven solely by market demand\n\nMaximum accessibility: No allocation caps, token-gating, or vestings. 100% open participation without restriction",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-08T12:09:20.683Z",
+        "categories": [
+            {
+                "id": "f88a6693-176d-4c95-b28f-70c67db21733",
+                "name": "DeFi",
+                "slug": "defi",
+                "title": "Essential DeFi Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "774ed6ce-d7fd-4037-ad2c-9c5049917c61",
+                "app_id": "3cb34018-0fe5-4741-8e1a-cf473e881ba9",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751976321852-Ramen-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "eebe5755-b0ba-4895-b2c1-36a7f2f6448d",
+                "app_id": "3cb34018-0fe5-4741-8e1a-cf473e881ba9",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751976355894-Ramen-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "f011c26d-bbdd-4d52-b387-7559ccb4b32e",
+                "app_id": "3cb34018-0fe5-4741-8e1a-cf473e881ba9",
+                "platform": "twitter",
+                "url": "https://x.com/ramen_finance"
+            }
+        ]
+    },
+    {
+        "id": "fd073fb2-1445-459f-9164-0d3aceb82cd7",
+        "name": "Pawpass",
+        "slogan": "Digital ID for pets on the go everywhere",
+        "short_description": "Access and share your pet's medical records and vaccine certificates, whenever or wherever",
+        "long_description": "Pawpass is a digital passport for pets—securely storing and sharing medical, ID, and travel info via QR code. Empowering pet owners with control, convenience, and peace of mind.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751913928836-pawpass.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751972854952-pawpass-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://pawpass.co.uk/",
+        "about_us": "# About Pawpass\n\n**Pawpass** is revolutionising pet care with the first-ever digital ID for animals. Our secure platform centralises your pet's essential information—medical records, vaccination histories, and travel documents—into a single, verifiable digital passport. This enables pet owners to effortlessly share their pet's credentials via a QR code, streamlining interactions with veterinarians, pet services, and travel authorities.\n\nFounded in 2023 by Julia Kemp in Bath, UK, Pawpass leverages blockchain technology and AI to ensure that all pet documentation is secure, transparent, and tamper-proof. Our mission is to empower pet owners with control and transparency, reducing administrative burdens and enhancing the overall well-being of pets.\n\nWe're proud to have secured \\$300,000 in pre-seed funding from investors including Block Dojo and Techstars, and have been awarded two Innovate UK grants. With over 3,000 users already on our waitlist, Pawpass is poised to transform how we manage and share pet identities.\n",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-07T18:47:38.186Z",
+        "categories": [
+            {
+                "id": "44a69c4a-336c-4097-b1e6-c1cf1dac8e5e",
+                "name": "Consumer",
+                "slug": "consumer",
+                "title": "Your Daily Consumer Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "bee8bccd-2953-4c05-967d-27636e2b5d36",
+                "app_id": "fd073fb2-1445-459f-9164-0d3aceb82cd7",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1752002923354-Pawpass-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "a15b1295-bc06-4a89-a62b-53a4f39125b0",
+                "app_id": "fd073fb2-1445-459f-9164-0d3aceb82cd7",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1752002923114-Pawpass-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "2e8028fe-ee58-4583-9415-5718c7a56a76",
+                "app_id": "fd073fb2-1445-459f-9164-0d3aceb82cd7",
+                "platform": "twitter",
+                "url": "https://x.com/usepawpass"
+            }
+        ]
+    },
+    {
+        "id": "c5efe0c0-94fa-4fa7-a59f-e1d6bf852f92",
+        "name": "Over/Under",
+        "slogan": "AI Powered E-sports Betting",
+        "short_description": "Over/Under trains computer vision algos to allow you to bet on your favorite streamers.",
+        "long_description": "Over/Under uses cutting edge computer vision algorithms to train on streamers. Based on the data analyzed, it automatically generates the odds of in game events.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751914627618-overunder.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751972674082-overunder-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://overunder.xyz/",
+        "about_us": "Over/Under uses cutting edge computer vision algorithms to train on streamers. Based on the data analyzed, it automatically generates the odds of in game events.\nRaised $2M from Build-A-Bera, Amber Group and more. ",
+        "total_rewards": null,
+        "featured": true,
+        "created_at": "2025-07-07T18:45:07.211Z",
+        "categories": [
+            {
+                "id": "44a69c4a-336c-4097-b1e6-c1cf1dac8e5e",
+                "name": "Consumer",
+                "slug": "consumer",
+                "title": "Your Daily Consumer Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "3c18b8cd-1624-493f-b27d-b1e171882751",
+                "app_id": "c5efe0c0-94fa-4fa7-a59f-e1d6bf852f92",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751994455702-OverUnder-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "92f0354b-6dcb-4036-a655-f1fd0df04fb3",
+                "app_id": "c5efe0c0-94fa-4fa7-a59f-e1d6bf852f92",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751994472179-OverUnder-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "6617b1b9-66b4-473f-809e-2e05473164ac",
+                "app_id": "c5efe0c0-94fa-4fa7-a59f-e1d6bf852f92",
+                "platform": "twitter",
+                "url": "https://x.com/playwithOU"
+            }
+        ]
+    },
+    {
+        "id": "0df8bcf8-1a25-4f15-9b02-4a28b0406de8",
+        "name": "Junky Ursas",
+        "slogan": "GambleFi Hub of Berachain",
+        "short_description": "Premier GambleFi dApp on Berachain with LP Vaults and exclusive BGT incentives via BGT Station.",
+        "long_description": "the premier GambleFi dApp on Berachain, serving up unique features like LP-providing Vaults and exclusive BGT incentives through effortless deposits via the BGT Station or Infrared.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751899822354-JunkyUrsas.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751899833845-JunkyUrsas-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://junkybets.com/",
+        "about_us": "# What is Junky Ursas?\n\nJM and welcome to the JunkyBets world – the premier GambleFi dApp on Berachain, serving up unique features like LP-providing Vaults and exclusive BGT incentives through effortless deposits via the BGT Station or Infrared. This is where junkies find their groove! Fully on-chain with the dopest PvP and solo games!\n\nWhat you see now? Just a teaser of what’s to come! Rest easy knowing this is just the kickoff – the squad of dedicated addicts is already cooking up a lit user experience that’s gonna blow your minds. None of this would’ve been possible without our OG junkies who tested, brainstormed, and hustled alongside us. Because of you, we smashed past 70k testnet users and reached 500k $JNKY token holders proudly repping the team.\n\nIn this doc, we’re breaking it all down – our current games, the architecture, the BGT flywheel, how we incentivize users, and how the Junky Ursas core NFT collection ties into the heart of JunkyBets. Plus, we’ll dive into the tech that powers it all and give you a sneak peek at what’s next on the horizon.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-07T14:52:32.878Z",
+        "categories": [
+            {
+                "id": "44a69c4a-336c-4097-b1e6-c1cf1dac8e5e",
+                "name": "Consumer",
+                "slug": "consumer",
+                "title": "Your Daily Consumer Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "18e06b1b-cde1-480e-b2b8-ef0dc3afa757",
+                "app_id": "0df8bcf8-1a25-4f15-9b02-4a28b0406de8",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751899889998-JunkyUrsas-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "fbbe0116-d230-4685-a173-a5fa7dd57a7d",
+                "app_id": "0df8bcf8-1a25-4f15-9b02-4a28b0406de8",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751899904848-JunkyUrsas-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "73f2c95a-a506-4cfd-8363-463d98909eca",
+                "app_id": "0df8bcf8-1a25-4f15-9b02-4a28b0406de8",
+                "platform": "twitter",
+                "url": "https://x.com/junkyUrsas/"
+            }
+        ]
+    },
+    {
+        "id": "a043ddc9-16de-4793-9e4d-3da75c4bf933",
+        "name": "Beratone",
+        "slogan": "Animal Crossing x Stardew Valley + Bears",
+        "short_description": "Build your farmstead, explore a vast world, complete quests, and uncover BeraTone's lore!",
+        "long_description": "Develop your own farmstead, explore an expansive world while completing a variety of fun quests and mini-games, and discover the lore waiting for you within the world of BeraTone",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751898059599-beratone.png",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751898270282-beratone-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://www.beratone.game/",
+        "about_us": "# WHAT IS BERATONE?\n\nBeraTone is a multiplayer, life-simulation and role-playing game for PC and mobile that will let you escape into a charming, ever-growing world full of wonder-whenever and wherever you want.\n\nLive your dream farm life, meet delightful characters, customize your own farm home, collect valuable resources and go exploring with friends online across a wide variety of enchanting landscapes.\n\nWhatever you choose to do-BeraTone is a world for you to get lost in and enjoy.\n\nBeraTone is a farming / online RPG / rhythm game inspired by games like Harvest Moon, Stardew Valley, Animal Crossing, Final Fantasy XIV, and Friday Night Funkin. Resource collecting, crafting, and customization are at the heart of the experience, while an engaging rhythm game offers a unique challenge and a breath of fresh air for the genre.\n\nBeraTone is a cozy and nostalgic ever-evolving online metaverse utilizing fresh and eye-catching 3D aesthetics to create a captivating world to explore. It is an online multiplayer game where you can meet new friends, embark on epic adventures, craft items, customize your home, earn rare items, and trade with other players.\n\nBeraTone is all about carving out your own slice of fantasy paradise. It’s set in the animal world of BeraTone, a fictional land where anything can happen. It’s an escape away from the crushing reality we all live in, a mystical place where everything is welcoming, friendly, and ripe for exploration. Adventure is waiting for you!",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-07T14:24:37.531Z",
+        "categories": [
+            {
+                "id": "7a86757e-e756-4380-ba65-e448424c9c1c",
+                "name": "Gaming",
+                "slug": "gaming",
+                "title": "Your Favorite Games"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "aaafac4e-ae5b-4df2-af7d-327790fe0771",
+                "app_id": "a043ddc9-16de-4793-9e4d-3da75c4bf933",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751898169319-Beratone-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "fdafddb7-70cc-4e6a-985c-7a16611caff4",
+                "app_id": "a043ddc9-16de-4793-9e4d-3da75c4bf933",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751898181106-Beratone-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "3b1f62ea-b0e5-41a7-ba70-790b65d25bb6",
+                "app_id": "a043ddc9-16de-4793-9e4d-3da75c4bf933",
+                "platform": "twitter",
+                "url": "https://x.com/BeratoneGame"
+            }
+        ]
+    },
+    {
+        "id": "1535ec33-17f7-4d0a-a045-e54404a2019f",
+        "name": "Basino",
+        "slogan": "Risk it all",
+        "short_description": "Basino is a Berachain-exclusive casino. Every game is designed for fun and virality.",
+        "long_description": "Basino is a Berachain-exclusive casino. Every game is designed and built from the ground up for fun and virality.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751897112546-Basino.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751897123246-basino-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://basino.wtf/",
+        "about_us": "# What is Basino?\n\nBasino is a Berachain-exclusive casino. Every game is designed and built from the ground up for fun and virality.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-07T14:15:46.865Z",
+        "categories": [
+            {
+                "id": "44a69c4a-336c-4097-b1e6-c1cf1dac8e5e",
+                "name": "Consumer",
+                "slug": "consumer",
+                "title": "Your Daily Consumer Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "d2b597e6-747e-465d-963d-c4df11b082f0",
+                "app_id": "1535ec33-17f7-4d0a-a045-e54404a2019f",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751897147611-Basino-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "f5c28754-e005-4d2b-a52f-c28e91effc49",
+                "app_id": "1535ec33-17f7-4d0a-a045-e54404a2019f",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751897158995-Basino-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "cd61b677-30f9-4523-94c6-d822eb53c250",
+                "app_id": "1535ec33-17f7-4d0a-a045-e54404a2019f",
+                "platform": "twitter",
+                "url": "https://x.com/basinowtf"
+            }
+        ]
+    },
+    {
+        "id": "0ee9487f-543a-429e-b57a-3301f1f683c5",
+        "name": "Yeet",
+        "slogan": "Home of the most Yeetarded products",
+        "short_description": "Home of the most Yeetarded products in the berachain ecosystem. Yeetards only.",
+        "long_description": "Home of the most Yeetarded products in the berachain ecosystem. Yeetards only.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751895219455-Yeet.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751896569272-yeet-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://yeetit.xyz/",
+        "about_us": "# What is yeet?\n\nHome of the most Yeetarded products in the berachain ecosystem. \n\n1) The Yeet BGT Auction: acquire BGT at a discount to market price, and compete for a big prize pool\n2) YeetBonds: acquire ecosystem tokens at a discount to market price\n3) Other Yeetarded shit. Don’t check the website\n\nYeetards only.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-07T14:00:34.278Z",
+        "categories": [
+            {
+                "id": "44a69c4a-336c-4097-b1e6-c1cf1dac8e5e",
+                "name": "Consumer",
+                "slug": "consumer",
+                "title": "Your Daily Consumer Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "f8288b1a-e2c2-4f78-b326-a8489f1b5fce",
+                "app_id": "0ee9487f-543a-429e-b57a-3301f1f683c5",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751895567823-Yeet-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "e309dd10-6e12-4704-a05a-dc179891087e",
+                "app_id": "0ee9487f-543a-429e-b57a-3301f1f683c5",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751895580141-Yeet-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "a17049dc-a8fb-4039-9111-1a10c0480283",
+                "app_id": "0ee9487f-543a-429e-b57a-3301f1f683c5",
+                "platform": "twitter",
+                "url": "https://x.com/eatsleepyeet"
+            }
+        ]
+    },
+    {
+        "id": "ad16b477-5a9d-495c-9f49-590922d5fb01",
+        "name": "Puffpaw",
+        "slogan": "Quit Smoking / Vape To Earn DePIN",
+        "short_description": "Puffpaw is the first quit smoking to earn / vape to earn DePIN.",
+        "long_description": "Puffpaw is the first quit smoking to earn / vape to earn DePIN, balancing physical hardware, node sales, and on chain tokenomics to build the best solution for smokers to quit.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751894693355-Puffpaw.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751894703031-puffpaw-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://www.puffpaw.xyz/",
+        "about_us": "# What is Puffpaw?\n\nPuffpaw, the first quit smoking and vape to earn platform on Berachain, has announced the successful closure of its $6 million seed round, led by Lemniscap. This milestone propels Puffpaw forward as the leading innovator in integrating blockchain technology with health-conscious vaping, setting new standards in the industry by merging healthier lifestyles with cutting-edge technology in a seamless manner.",
+        "total_rewards": null,
+        "featured": true,
+        "created_at": "2025-07-07T13:29:52.893Z",
+        "categories": [
+            {
+                "id": "44a69c4a-336c-4097-b1e6-c1cf1dac8e5e",
+                "name": "Consumer",
+                "slug": "consumer",
+                "title": "Your Daily Consumer Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "b2758288-a752-417c-8740-974868833c1a",
+                "app_id": "ad16b477-5a9d-495c-9f49-590922d5fb01",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751993797693-Puffpaw-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "4996983a-eb7f-40ac-bb72-140de4d36231",
+                "app_id": "ad16b477-5a9d-495c-9f49-590922d5fb01",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751993810339-Puffpaw-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "ecdd8805-8967-45c2-8be6-53ae6dec6cfa",
+                "app_id": "ad16b477-5a9d-495c-9f49-590922d5fb01",
+                "platform": "twitter",
+                "url": "https://x.com/puffpaw_xyz"
+            }
+        ]
+    },
+    {
+        "id": "2d88c5ca-b753-43eb-9cec-3dd9c42b2ce8",
+        "name": "Wizzwoods",
+        "slogan": "Telegram Native Farming Game",
+        "short_description": "Explore Wizzwoods: a pixel game merging Telegram, Twitter, and blockchain. Farm, upgrade, and join!",
+        "long_description": "Discover Wizzwoods, the innovative pixel game bridging Telegram, Twitter, and blockchain. Dive into farming, upgrades, and map customization while connecting with our vibrant community. Join the fun!",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751894168273-Wizzwoods.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751894173397-wizzwood-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://www.wizzwoods.com/",
+        "about_us": "# What is Wizzwoods?\n\nWizzwoods is an engaging open-world strategy farming game built on the TG Mini-app and Twitter Extensions. As you explore the world of Wizzwoods, you'll experience strategic production, user-generated content, multiplayer interactions, cross-chain trading, and more. You'll be immersed in a world that combines blockchain ownership with your gaming enjoyment, offering a captivating blend of management, creation, competition, and trading.\n\nWizzwoods is set to be the top pool on Berachain, where $WIZZ LP pairs can earn the most $BGT. Our game allows users to earn yield through DeFi protocols or by providing liquidity, making it the top beneficiary of Berachain's POL/BGT mechanism. It’s not just a game; it’s a DeFi powerhouse. Imagine users interacting with complex DeFi protocols on Berachain simply by playing a game!\n\nWizzwoods is a unique blend of Pixels, Axie Infinity, and DeFi Kingdoms, but with a twist—it’sinterchain with Berachain, TON, and Tabi. It’s the only game of its kind, bridging multiple blockchain ecosystems and unlocking a truly new gaming experience that only be achieved interchain.\n\nUnlike typical GameFi projects, Wizzwoods already generates substantial income from real users. Our external revenue streams are designed to make Wizzwoods a long-term success, providing value back to our community, while avoiding the pitfalls of the usual solely internal economy ponzia. This is sustainable GameFi at its finest.",
+        "total_rewards": null,
+        "featured": true,
+        "created_at": "2025-07-07T13:17:20.289Z",
+        "categories": [
+            {
+                "id": "7a86757e-e756-4380-ba65-e448424c9c1c",
+                "name": "Gaming",
+                "slug": "gaming",
+                "title": "Your Favorite Games"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "9a5603f4-159f-41ff-a287-82a1bc4aedab",
+                "app_id": "2d88c5ca-b753-43eb-9cec-3dd9c42b2ce8",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751995925055-wizzwoods-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "161b3750-32ed-48c2-92fb-cb272efb19b5",
+                "app_id": "2d88c5ca-b753-43eb-9cec-3dd9c42b2ce8",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751995937021-wizzwoods-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "bca0ab06-7313-4bbe-ab9f-495502f53d10",
+                "app_id": "2d88c5ca-b753-43eb-9cec-3dd9c42b2ce8",
+                "platform": "twitter",
+                "url": "https://x.com/WizzwoodsGame"
+            }
+        ]
+    },
+    {
+        "id": "930ad04a-00b4-44e1-ae82-5cb2a0d2bb6f",
+        "name": "Berapaw",
+        "slogan": "Proof of Liquidity with Berapaw DeFi",
+        "short_description": "BeraPaw is a liquid staking protocol that turns Berachain’s token into a versatile, liquid asset.",
+        "long_description": "BeraPaw is an innovative liquid staking protocol that converts Berachain’s native token into a more versatile and liquid asset, providing users with a seamless and hassle-free experience.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751618881945-berapaw.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751618886916-berapaw-banner.png",
+        "fallback_text": null,
+        "external_url": "https://berapaw.com/",
+        "about_us": "# What is BeraPaw?\n\nBeraPaw is a novel liquid wrapper protocol built atop Berachain’s Proof of Liquidity (PoL) consensus mechanism. It simplifies and automates PoL interactions for participants, enabling them to unlock the full potential of Berachain’s governance token, BGT, in a decentralized and user-friendly manner.\n\nAt its core, BeraPaw transforms Berachain’s native yield-bearing token, BGT, into a more versatile and liquid asset called Liquid BGT ($LBGT). This process unlocks a host of benefits for users:\n\n**Flexibility**: Users can buy, sell, collateralize, enter leveraged positions, or use $LBGT anyway across the DeFi ecosystem.\n**Convenience**: All PoL interactions, including staking and rewards reinvestment, are automated.\n**Higher Yields**: $LBGT provides enhanced returns compared to traditional BGT delegations.\nTo ensure complete decentralization, BeraPaw also introduces a governance token called $PAW. $PAW holders are the protocol’s owners, with the power to decide how BGT is delegated across validators while earning protocol rewards.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-04T08:48:37.492Z",
+        "categories": [
+            {
+                "id": "f88a6693-176d-4c95-b28f-70c67db21733",
+                "name": "DeFi",
+                "slug": "defi",
+                "title": "Essential DeFi Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "42c5cbef-2cb3-4c75-93c8-247ff9c61fd0",
+                "app_id": "930ad04a-00b4-44e1-ae82-5cb2a0d2bb6f",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751618899312-Berapaw-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "df221739-91aa-488f-942b-51972d5778ec",
+                "app_id": "930ad04a-00b4-44e1-ae82-5cb2a0d2bb6f",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751618908812-Berapaw-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "7f47f1d0-88a8-4041-b581-46b9a6dde3fd",
+                "app_id": "930ad04a-00b4-44e1-ae82-5cb2a0d2bb6f",
+                "platform": "twitter",
+                "url": "https://x.com/0xBeraPaw"
+            }
+        ]
+    },
+    {
+        "id": "e9ba547f-d2a3-4d9f-92c4-0b186e965b96",
+        "name": "Haiku",
+        "slogan": "Outcome-as-a-Service for DeFi.",
+        "short_description": "The intent solver that lets users, agents, and APIs trade \nanything, anywhere, anytime.",
+        "long_description": "The intent solver that lets users, agents, and APIs trade \nanything, anywhere, anytime.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751455125694-Haiku.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751455136701-haiku-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://haiku.trade/",
+        "about_us": "# What is Haiku?\nHaiku is the AI-powered trading hub of Berachain 🐻⛓️, built on a simple belief: trading should be easy.\n\nWe imagine a future where trading is fully autonomous and driven by your objectives - rather than the mechanics and complexities of trade execution. A world where you don’t need to manually coordinate multiple trades, navigate fragmented DeFi interfaces, or spend hours monitoring positions. Where complex strategies execute in seconds, not minutes (or hours!), and where your trading goals matter more than technical knowledge. \n\nHaiku is already reimagining DeFi - transforming complex operations into one-click trades for users, AI Agents, and protocols alike.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-02T11:19:36.163Z",
+        "categories": [
+            {
+                "id": "f88a6693-176d-4c95-b28f-70c67db21733",
+                "name": "DeFi",
+                "slug": "defi",
+                "title": "Essential DeFi Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "e79fe3b5-1681-45d0-bb7c-51e0ec8e913b",
+                "app_id": "e9ba547f-d2a3-4d9f-92c4-0b186e965b96",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751455147430-haiku-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "df35e502-7418-4453-97de-35118666e2d2",
+                "app_id": "e9ba547f-d2a3-4d9f-92c4-0b186e965b96",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751455158979-haiku-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "96c02186-00d2-4bc7-b222-c1df98e8a9b0",
+                "app_id": "e9ba547f-d2a3-4d9f-92c4-0b186e965b96",
+                "platform": "twitter",
+                "url": "https://x.com/HaikuTrade"
+            }
+        ]
+    },
+    {
+        "id": "5934670b-a947-4243-bcd8-6d4e46d49e1d",
+        "name": "Roots",
+        "slogan": "Leveraged Liquidity Layer on PoL",
+        "short_description": "Roots is pioneering decentralized finance on Berachain with innovative blockchain solutions.",
+        "long_description": "Roots is pioneering decentralized finance on Berachain with innovative blockchain solutions.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1752685771297-logo.png",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751454856782-rootsfi-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://rootsfi.com/",
+        "about_us": "# What is Roots?\nRoots is a decentralized finance (DeFi) protocol built on Berachain that enhances liquidity and yield opportunities through Proof of Liquidity (PoL). The protocol allows users to:\n\n**Mint MEAD**\nMint the MEAD stablecoin using Berachain-based assets listed for BGT emissions, such as LP positions on Berahub\n\n**Earn rBGT**\nPassively earn rBGT (governance rewards) while maintaining your positions\n\n**Secure Network**\nParticipate in network security while maintaining asset exposure\n\n# Why use Roots?\nRoots simplifies DeFi participation on Berachain & Maximizes user rewards through:\n\n**Capital Efficiency**\nBorrow MEAD against collateral without selling assets\nRetain ownership of staked/locked assets (e.g., BGT-earning LP positions)\n\n**Automated Rewards**\nBGT auto-farming: Maximizes yield even as a collateral\n\n**Stability Pool**\nStake MEAD to earn liquidation rewards (discounted collateral)\nActs as a backstop for protocol solvency\n\n**Ecosystem Composability**\nUse MEAD across Berachain DEXs, lending markets, and more",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-07-02T11:17:03.835Z",
+        "categories": [
+            {
+                "id": "f88a6693-176d-4c95-b28f-70c67db21733",
+                "name": "DeFi",
+                "slug": "defi",
+                "title": "Essential DeFi Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "264ed825-8e25-40bd-829b-573eae66520f",
+                "app_id": "5934670b-a947-4243-bcd8-6d4e46d49e1d",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751454871604-rootsfi-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "2c1986e0-d282-4e66-88a6-48ff005740fd",
+                "app_id": "5934670b-a947-4243-bcd8-6d4e46d49e1d",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751454884707-rootsfi-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "725028dc-7fc3-42a6-aa70-2b8fc6c5a464",
+                "app_id": "5934670b-a947-4243-bcd8-6d4e46d49e1d",
+                "platform": "twitter",
+                "url": "https://x.com/rootsfi"
+            }
+        ]
+    },
+    {
+        "id": "de584980-122b-41fd-9049-81752a54345c",
+        "name": "Origami",
+        "slogan": "EARN, COMPOUND, FOLD.",
+        "short_description": "EARN, COMPOUND, FOLD. Automated Leverage Infrastructure for DeFi",
+        "long_description": "Origami is a first-in-class automated leverage protocol launching on Ethereum and 🐻⛓️",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751306238394-Origami.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751362395050-origami-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://origami.finance",
+        "about_us": "# What is Origami?\nOrigami is a first-in-class automated leverage protocol launching on Ethereum and 🐻⛓️\n\nFully integrated with third-party lenders, Origami allows for folded Yield-Bearing Token (YBT) exposure with full automation, maximising capital efficiency whilst minimising risk of liquidation and bad debt. No health factor monitoring. No position management. Just true one-click leverage.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-06-30T17:58:55.530Z",
+        "categories": [
+            {
+                "id": "f88a6693-176d-4c95-b28f-70c67db21733",
+                "name": "DeFi",
+                "slug": "defi",
+                "title": "Essential DeFi Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "2b850310-1176-42ff-8fa1-967ef1d63b95",
+                "app_id": "de584980-122b-41fd-9049-81752a54345c",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751388199607-origaimi-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "eb983f14-d9b5-4b03-93d7-23287b689ca8",
+                "app_id": "de584980-122b-41fd-9049-81752a54345c",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751388827218-origami-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "28a050b9-0719-4981-ad90-e593ddd8570f",
+                "app_id": "de584980-122b-41fd-9049-81752a54345c",
+                "platform": "twitter",
+                "url": "https://x.com/origami_fi"
+            }
+        ]
+    },
+    {
+        "id": "2c77c436-6250-42c7-8480-ff32c3c762be",
+        "name": "Smilee",
+        "slogan": "Generating awesome yield with Smilee",
+        "short_description": "Mint wgBERA to harness Proof of Liquidity with Berachain's first PoL-native LST. Earn BGT fast!",
+        "long_description": "Mint wgBERA and tap into the full power of Proof of Liquidity with the first PoL-native LST. Unlock the top farming opportunity on Berachain and earn BGT (and its derivatives) faster than anyone else.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751385338650-Smilee.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751388328871-smilee-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://smilee.finance",
+        "about_us": "# What is Smilee?\nLiquid Staking Tokens (LSTs) have proven to be a hit — just look at Lido on Ethereum. They let users secure the network and participate in DeFi (borrowing, trading, LPing).\n\nBut Smilee’s LST is built different.\n\nIt’s designed natively for Berachain’s Proof of Liquidity (PoL) model, redirecting validator power into bribes and liquidity incentives — not passive staking or rebasing.\n\nThrough smart contracts, LP token collateral, and protocol-owned liquidity (via gFund), Smilee turns its LST into a BGT-generating machine.\n\nThis is wgBERA: the first PoL-native LST that aims to end the Proof of Stake narrative entirely.",
+        "total_rewards": null,
+        "featured": false,
+        "created_at": "2025-06-30T17:55:25.845Z",
+        "categories": [
+            {
+                "id": "f88a6693-176d-4c95-b28f-70c67db21733",
+                "name": "DeFi",
+                "slug": "defi",
+                "title": "Essential DeFi Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "e4dccda2-2e56-40c5-91cd-ce0226d072ab",
+                "app_id": "2c77c436-6250-42c7-8480-ff32c3c762be",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751388156435-smilee-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "cf0ded04-3e95-4372-a4aa-0cdf7070c971",
+                "app_id": "2c77c436-6250-42c7-8480-ff32c3c762be",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751388171195-smilee-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "e49736d3-803a-4d22-9174-8a2471c61b5b",
+                "app_id": "2c77c436-6250-42c7-8480-ff32c3c762be",
+                "platform": "twitter",
+                "url": "https://x.com/smileefinance"
+            }
+        ]
+    },
+    {
+        "id": "c03134ee-7f81-4cfb-bf9c-41de5d80e4e6",
+        "name": "Dolomite",
+        "slogan": "The Modular Money Market",
+        "short_description": "Maximize your assets with Dolomite, supporting 1,000+ assets for lending, borrowing, and earning.",
+        "long_description": "Maximize your assets with Dolomite, the only platform supporting 1,000+ unique assets. Lend, borrow, and earn while retaining your DeFi-native rights. Join the comprehensive DeFi experience!",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751305690950-Dolomite.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751362369825-dolomite-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://dolomite.io",
+        "about_us": "# What is Doloite?\n\nDolomite is a next-generation decentralized money market protocol and DEX that offers broad token support and capital efficiency with its virtual liquidity system.\n\nDolomite combines the strengths of a DEX and a lending protocol into the most capital efficient and modular protocol DeFi has seen yet! Dolomite is capable of offering over-collateralized loans, margin trading, spot trading and other financial instruments. \n\nDolomite makes hedging your portfolio, leveraging it, or unlocking dormant equity a breeze through its broad token support, capital efficiency, and non-rent seeking model for passing through DeFi rewards to users. Over time, Dolomite aims to become a hub for DeFi activity to allow other protocols, yield aggregators, DAOs, market makers, hedge funds, and others to manage their portfolios and run on-chain strategies.",
+        "total_rewards": null,
+        "featured": true,
+        "created_at": "2025-06-30T17:49:20.214Z",
+        "categories": [
+            {
+                "id": "f88a6693-176d-4c95-b28f-70c67db21733",
+                "name": "DeFi",
+                "slug": "defi",
+                "title": "Essential DeFi Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "c009dc0c-91e3-49b2-a03a-22fd419b7631",
+                "app_id": "c03134ee-7f81-4cfb-bf9c-41de5d80e4e6",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751388014782-dolomite-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "f6bcb25c-584c-4c59-ac9f-5e970e6e0901",
+                "app_id": "c03134ee-7f81-4cfb-bf9c-41de5d80e4e6",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751388019957-dolomite-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "91520fef-0f8b-4a2d-b8b6-5eda8ee20a9a",
+                "app_id": "c03134ee-7f81-4cfb-bf9c-41de5d80e4e6",
+                "platform": "twitter",
+                "url": "https://x.com/dolomite_io"
+            }
+        ]
+    },
+    {
+        "id": "b93750c7-9d66-47eb-a0cf-a8b8fd0dd400",
+        "name": "Beraborrow",
+        "slogan": "Multi-asset CDP stablecoin",
+        "short_description": "Beraborrow is a CDP offering instant liquidity on Bera assets via the first PoL stable, Nectar ",
+        "long_description": "Beraborrow unlocks instant liquidity against Berachain assets through the first PoL powered stablecoin, Nectar ($NECT). ",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751305389280-Beraborrow.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751307897876-beraborrow-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://beraborrow.com",
+        "about_us": "# What is Beraborrow?\n\nBeraborrow unlocks instant liquidity against Berachain assets through the first PoL powered stablecoin, Nectar ($NECT). Built with simplicity and flexibility at its core, Beraborrow is designed to maximise opportunities for users without forcing them to sacrifice yield.\n\nThe protocol enables users to deposit collateral assets into Dens, which mint our over-collateralised stablecoin, $NECT. $NECT can then be used throughout the Berachain DeFi ecosystem, unlocking further opportunities whilst maintaining exposure to the original assets. Initially built around $iBGT, the protocol has since evolved into a multi-collateral platform.  Offering support for Bera native tokens, liquid staking derivatives, or LP positions, as collateral to mint $NECT. \n\nBeraborrow enables users to retain price exposure to their assets while unlocking liquidity. The protocol makes use of Proof of Liquidity (PoL) to supercharge key features and to bootstrap liquidity, enabling users to gain leverage to the collateral asset while boosting the yield it generates.\n\nNectar ($NECT) is the first stablecoin fully collateralised by Berachain native assets, offering users a composable way to participate in the ecosystem without selling, all while benefiting from the unique advantages that PoL offers. Essentially, $NECT can be thought of as a unit of account that can accrue value through PoL and liquidations. \n\nConsider Beraborrow as a foundational building block for the Berachain. Our ambition is to develop a comprehensive suite of essential products that fuel growth for Berachain, starting with the core need for a Native CDP platform. ",
+        "total_rewards": null,
+        "featured": true,
+        "created_at": "2025-06-30T17:44:37.595Z",
+        "categories": [
+            {
+                "id": "f88a6693-176d-4c95-b28f-70c67db21733",
+                "name": "DeFi",
+                "slug": "defi",
+                "title": "Essential DeFi Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "05e698a6-7687-4303-a83f-026cfc48da9c",
+                "app_id": "b93750c7-9d66-47eb-a0cf-a8b8fd0dd400",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751387976845-beraborrow-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "3c0c93a0-b9b3-4318-9290-f8da66f4ede4",
+                "app_id": "b93750c7-9d66-47eb-a0cf-a8b8fd0dd400",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751387982939-beraborrow-ss2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "1fbaf852-d4fd-419e-805e-42707f65a95c",
+                "app_id": "b93750c7-9d66-47eb-a0cf-a8b8fd0dd400",
+                "platform": "twitter",
+                "url": "https://x.com/beraborrow"
+            }
+        ]
+    },
+    {
+        "id": "5c405abf-c721-41af-b479-95c88cbc6c68",
+        "name": "Kodiak",
+        "slogan": "Berachain's Native Liquidity Hub",
+        "short_description": "Kodiak is Berachain's only DEX from the Build-a-Bera program, offering token launch and liquidity solutions.",
+        "long_description": "Kodiak is the only DEX incubated by Berachain's Build-a-Bera accelerator program with the mandate of providing Berachain a suite of token launching, trading and liquidity provisioning solutions.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751305291973-Kodiak.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751307092896-kodiak-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://kodiak.finance",
+        "about_us": "# What is Kodiak?\nKodiak, is the first vertically-integrated liquidity hub on Berachain combining the following layers:\n\nDecentralized Exchange (Kodiak DEX): providing users with a non-custodial, highly capital-efficient trading and liquidity provision experience powered by its concentrated and full-range AMMs. \n\nAutomated Liquidity Manager (Kodiak Islands): attracting sticky deposits from the average user through our set-and-forget automated concentrated liquidity strategy vaults.\n\nIntegrated Incentive Layer (Sweetened Islands): tapping into Berachain’s Proof-of-Liquidity (PoL) mechanism to sustainably incentivize liquidity for Kodiak Islands.\n\nNo-Code Token Deployer Factory (Panda Factory): facilitating the permissionless deployment of new tokens and their initial (e.g., memecoins) liquidity on the Kodiak full-range AMM (ideal for highly volatile assets whose price characteristics are undiscovered). \n\n# Why Berachain?\nKodiak is the only DEX incubated by Berachain's Build-a-Bera accelerator program with the mandate of providing Berachain a suite of token launching, trading and liquidity provisioning solutions.\n\nBerachain is a highly performant EVM-compatible layer one blockchain secured by its novel PoL consensus mechanism. For a traditional Delegated Proof of Stake (DPos) network, stakeholders and users must compromise between staking the network's governance token with the validator set to provide security or contributing liquidity to the network's decentralized applications. However, with PoL, the only way to gain the network's governance token (BGT) is by providing liquidity to a set of whitelisted applications, liquidity pools, and/or vaults on the chain. As a result, PoL provides a solution that ensures that liquidity grows in tandem with staking.\n\nThe initial set of whitelisted applications starts with the chain-owned DEX (BEX), perpetual futures exchange (Berps), and lending platform (Bend), but will quickly expand to any smart contract deployed on the chain via governance. The Kodiak core team worked closely with the Berachain developer team to ensure that Kodiak’s Islands will be compatible with Berachain’s Proof of Liquidity (PoL) consensus mechanism.\n\nKodiak and BEX are not competitors, but meant to be complementary with each other. By design, BEX is a full-range AMM and does not offer nor does it plan on offering a concentrated liquidity solution. Additionally, one of the major concerns of concentrated liquidity in the PoL system is that users could sybil farm BGT emissions by providing concentrated liquidity that is either always out of range or in a very tight range. This is where Kodiak comes in with its unique Islands product.\n\nBy leveraging our sophisticated back-end infrastructure, Kodiak Islands are automated vaults designed to dynamically adjust concentrated liquidity based on market conditions to optimize risk-adjusted returns with maximal in-range liquidity uptime. Kodiak also leverages liquidity on BEX when an Island needs to be rebalanced. Islands free users from the need for constant manual intervention while also securing Berachain with deep and in-range concentrated liquidity.",
+        "total_rewards": null,
+        "featured": true,
+        "created_at": "2025-06-30T17:41:51.389Z",
+        "categories": [
+            {
+                "id": "f88a6693-176d-4c95-b28f-70c67db21733",
+                "name": "DeFi",
+                "slug": "defi",
+                "title": "Essential DeFi Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "28943c2c-569b-4610-8368-6694fcc1c64a",
+                "app_id": "5c405abf-c721-41af-b479-95c88cbc6c68",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751387843947-kodiak-22-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "362cf175-7372-4e30-9cc4-469c8d798a89",
+                "app_id": "5c405abf-c721-41af-b479-95c88cbc6c68",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751387854911-kodiak-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "3a20c188-b34a-427d-9390-0a71501c803e",
+                "app_id": "5c405abf-c721-41af-b479-95c88cbc6c68",
+                "platform": "twitter",
+                "url": "https://x.com/kodiakfi"
+            }
+        ]
+    },
+    {
+        "id": "857d964b-60e8-4381-8891-def8a23a4880",
+        "name": "Infrared",
+        "slogan": "Proof of Liquidity in one click",
+        "short_description": "Infrared simplifies interacting with Proof of Liquidity with liquid staking products.",
+        "long_description": "Infrared simplifies interacting with Proof of Liquidity with liquid staking products.",
+        "icon_url": "https://storage.googleapis.com/bera-explore-page/1751305149734-Infrared.jpg",
+        "banner_url": "https://storage.googleapis.com/bera-explore-page/1751307442276-infrared-banner.jpg",
+        "fallback_text": null,
+        "external_url": "https://infrared.finance",
+        "about_us": "# What is Infrared?\nInfrared is focused on building infrastructure around the Proof of Liquidity (PoL) mechanism pioneered by Berachain. The protocol aims to maximize value capture by providing easy-to-use liquid staking solutions for BGT and BERA, node infrastructure, and vaults. Through building solutions around Proof of Liquidity (PoL), Infrared is dedicated to enhancing the user experience and driving the growth of the Berachain ecosystem.\n\n# Why use Infrared?\nInfrared simplifies participation in Berachain’s Proof of Liquidity (PoL), helping users maximize their BGT and BERA rewards through easy-to-use products like iBGT and iBERA. Infrared’s products also enable new flywheels throughout the Berachain ecosystem that wouldn’t otherwise be possible by making BGT and staked BERA composable.",
+        "total_rewards": null,
+        "featured": true,
+        "created_at": "2025-06-30T17:39:29.606Z",
+        "categories": [
+            {
+                "id": "f88a6693-176d-4c95-b28f-70c67db21733",
+                "name": "DeFi",
+                "slug": "defi",
+                "title": "Essential DeFi Apps"
+            }
+        ],
+        "screenshots": [
+            {
+                "id": "c2cf92c2-5093-4381-9fe1-71e734bd8df0",
+                "app_id": "857d964b-60e8-4381-8891-def8a23a4880",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751373199262-Infrared-ss-1.jpg",
+                "order_index": 0
+            },
+            {
+                "id": "45180bfd-8fd6-4dd6-bc12-2230f6029cda",
+                "app_id": "857d964b-60e8-4381-8891-def8a23a4880",
+                "image_url": "https://storage.googleapis.com/bera-explore-page/1751373211020-Infrared-ss-2.jpg",
+                "order_index": 1
+            }
+        ],
+        "socials": [
+            {
+                "id": "344bfff4-c476-47b6-8875-c97dd08d5db7",
+                "app_id": "857d964b-60e8-4381-8891-def8a23a4880",
+                "platform": "twitter",
+                "url": "http://x.com/infraredfinance"
+            }
+        ]
+    }
+]

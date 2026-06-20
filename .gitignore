@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.*
+*.local
+.DS_Store
+
+checker-app/node_modules/
+checker-app/dist/
+
+# embedded repo — track separately if needed
+ecosystemextractor/

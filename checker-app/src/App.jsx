@@ -146,7 +146,15 @@ export default function App() {
   const [checking, setChecking] = useState(false)
   const [fetching, setFetching] = useState(false)
   const [progress, setProgress] = useState({ done: 0, total: 0 })
+  const [light, setLight] = useState(false)
   const fileInputRef = useRef(null)
+
+  const toggleTheme = useCallback(() => {
+    setLight((prev) => {
+      document.body.classList.toggle('light', !prev)
+      return !prev
+    })
+  }, [])
 
   const handleFile = useCallback((file) => {
     if (!file) return
@@ -242,6 +250,17 @@ export default function App() {
 
   const pct = progress.total ? Math.round((progress.done / progress.total) * 100) : 0
 
+  const isDone = projects.length > 0 && !checking &&
+    projects.every((p) => p.websiteStatus !== 'idle' && p.websiteStatus !== 'checking')
+
+  const counts = isDone ? {
+    total: projects.length,
+    alive:        projects.filter((p) => overallStatus(p.websiteStatus, p.xStatus) === 'both-alive').length,
+    maybe:        projects.filter((p) => overallStatus(p.websiteStatus, p.xStatus) === 'web-only').length,
+    possiblyDead: projects.filter((p) => overallStatus(p.websiteStatus, p.xStatus) === 'x-only').length,
+    dead:         projects.filter((p) => overallStatus(p.websiteStatus, p.xStatus) === 'both-dead').length,
+  } : null
+
   return (
     <div className="app">
       <header className="header">
@@ -252,6 +271,9 @@ export default function App() {
           )}
         </div>
         <div className="header-right">
+          <button className="btn-theme" onClick={toggleTheme} title="Toggle theme">
+            {light ? '🌙' : '☀️'}
+          </button>
           {checking && (
             <div className="progress-wrap">
               <div className="progress-bar">
@@ -331,6 +353,30 @@ export default function App() {
       ) : (
         <>
           {parseError && <p className="parse-error">{parseError}</p>}
+          {counts && (
+            <div className="summary">
+              <div className="summary-card total">
+                <span className="summary-num">{counts.total}</span>
+                <span className="summary-label">Total</span>
+              </div>
+              <div className="summary-card alive">
+                <span className="summary-num">{counts.alive}</span>
+                <span className="summary-label">Alive</span>
+              </div>
+              <div className="summary-card maybe">
+                <span className="summary-num">{counts.maybe}</span>
+                <span className="summary-label">Maybe</span>
+              </div>
+              <div className="summary-card possibly-dead">
+                <span className="summary-num">{counts.possiblyDead}</span>
+                <span className="summary-label">Possibly Dead</span>
+              </div>
+              <div className="summary-card dead">
+                <span className="summary-num">{counts.dead}</span>
+                <span className="summary-label">Dead</span>
+              </div>
+            </div>
+          )}
           <div className="table-wrap">
             <table>
               <thead>

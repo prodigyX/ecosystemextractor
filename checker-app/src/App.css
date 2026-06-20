@@ -122,6 +122,16 @@ body {
   background: #142d44;
 }
 
+.btn-fetch {
+  background: #1a1a2e;
+  color: #a78bfa;
+  border: 1px solid #3b2f6e;
+}
+
+.btn-fetch:not(:disabled):hover {
+  background: #22203a;
+}
+
 /* ── Dropzone ── */
 .dropzone {
   margin-top: 40px;
@@ -154,6 +164,25 @@ body {
 .dropzone-sub {
   font-size: 0.825rem;
   color: #475569;
+}
+
+.dropzone-link {
+  color: #a78bfa;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.dropzone-link:hover {
+  color: #c4b5fd;
+}
+
+.spin {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .dropzone-error {

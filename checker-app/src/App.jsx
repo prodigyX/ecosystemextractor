@@ -144,6 +144,7 @@ export default function App() {
   const [fileName, setFileName] = useState(null)
   const [parseError, setParseError] = useState(null)
   const [checking, setChecking] = useState(false)
+  const [fetching, setFetching] = useState(false)
   const [progress, setProgress] = useState({ done: 0, total: 0 })
   const fileInputRef = useRef(null)
 
@@ -172,6 +173,26 @@ export default function App() {
     e.preventDefault()
     handleFile(e.dataTransfer.files[0])
   }
+
+  const fetchFromBerachain = useCallback(async () => {
+    if (fetching || checking) return
+    setFetching(true)
+    setParseError(null)
+    try {
+      const res = await fetch('/api/extract')
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Extraction failed')
+      const arr = Array.isArray(json) ? json : [json]
+      setProjects(extractProjects(arr))
+      setFileName('explore.berachain.com (live)')
+      setChecking(false)
+      setProgress({ done: 0, total: 0 })
+    } catch (err) {
+      setParseError(`Fetch failed: ${err.message}`)
+    } finally {
+      setFetching(false)
+    }
+  }, [fetching, checking])
 
   const startCheck = useCallback(async () => {
     if (checking || projects.length === 0) return
@@ -240,9 +261,16 @@ export default function App() {
             </div>
           )}
           <button
+            className="btn btn-fetch"
+            onClick={fetchFromBerachain}
+            disabled={fetching || checking}
+          >
+            {fetching ? 'Fetching…' : 'Fetch from Berachain'}
+          </button>
+          <button
             className="btn btn-upload"
             onClick={() => fileInputRef.current?.click()}
-            disabled={checking}
+            disabled={fetching || checking}
           >
             Upload JSON
           </button>
@@ -272,14 +300,32 @@ export default function App() {
 
       {projects.length === 0 ? (
         <div
-          className={`dropzone`}
+          className="dropzone"
           onDrop={onDrop}
           onDragOver={(e) => e.preventDefault()}
           onClick={() => fileInputRef.current?.click()}
         >
-          <div className="dropzone-icon">↑</div>
-          <p className="dropzone-title">Drop your extract JSON here</p>
-          <p className="dropzone-sub">or click to browse</p>
+          {fetching ? (
+            <>
+              <div className="dropzone-icon spin">⟳</div>
+              <p className="dropzone-title">Fetching from Berachain…</p>
+              <p className="dropzone-sub">Launching browser, this takes ~10–20s</p>
+            </>
+          ) : (
+            <>
+              <div className="dropzone-icon">↑</div>
+              <p className="dropzone-title">Drop your extract JSON here</p>
+              <p className="dropzone-sub">
+                or click to browse · or use{' '}
+                <span
+                  className="dropzone-link"
+                  onClick={(e) => { e.stopPropagation(); fetchFromBerachain() }}
+                >
+                  Fetch from Berachain
+                </span>
+              </p>
+            </>
+          )}
           {parseError && <p className="dropzone-error">{parseError}</p>}
         </div>
       ) : (

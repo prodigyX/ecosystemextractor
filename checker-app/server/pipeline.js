@@ -1,0 +1,164 @@
+import { checkHttp } from './signals/http.js'
+import { checkDnsSsl } from './signals/dns-ssl.js'
+import { checkDomain } from './signals/domain.js'
+import { checkSitemap } from './signals/sitemap.js'
+import { checkContent } from './signals/content.js'
+import { checkGithub } from './signals/github.js'
+import { checkDiscord } from './signals/discord.js'
+import { checkTelegram } from './signals/telegram.js'
+import { checkDefillama } from './signals/defillama.js'
+import { checkX } from './signals/x.js'
+import { domainOf } from './util.js'
+
+const PROJECT_CONCURRENCY = 4
+
+export function scoreVerdict(evidence) {
+  const score = Math.max(
+    0,
+    Math.min(100, 50 + evidence.reduce((sum, e) => sum + (e.delta || 0), 0))
+  )
+  let verdict
+  if (score >= 75) verdict = 'active'
+  else if (score >= 60) verdict = 'likely-active'
+  else if (score >= 40) verdict = 'unclear'
+  else if (score >= 25) verdict = 'likely-dead'
+  else verdict = 'dead'
+  return { score, verdict }
+}
+
+async function safeRun(name, fn) {
+  try {
+    const { facts = {}, evidence = [] } = (await fn()) || {}
+    return { name, facts, evidence: evidence.map((e) => ({ ...e, signal: name })) }
+  } catch (err) {
+    return {
+      name,
+      facts: {},
+      evidence: [{ signal: name, level: 'info', label: `${name} check crashed`, detail: err.message, delta: 0 }],
+    }
+  }
+}
+
+async function checkProject(project, shared, emit) {
+  const ctx = {
+    env: shared.env,
+    store: shared.store,
+    storeKey: domainOf(project.website) || project.name,
+    getBrowser: shared.getBrowser,
+    xState: shared.xState,
+    html: null,
+    finalUrl: null,
+    links: {},
+  }
+
+  const allEvidence = []
+  const allFacts = {}
+  const collect = (r) => {
+    allEvidence.push(...r.evidence)
+    Object.assign(allFacts, r.facts)
+    emit({ type: 'signal', projectId: project.id, signal: r.name, evidence: r.evidence })
+  }
+
+  // Stage A: signals that don't need homepage HTML — run all at once, HTTP first in the same batch
+  const httpPromise = safeRun('website', () => checkHttp(project)).then((r) => {
+    ctx.html = r.facts.html
+    ctx.finalUrl = r.facts.finalUrl
+    delete r.facts.html // don't ship megabytes to the client
+    collect(r)
+  })
+
+  const stageA = [
+    httpPromise,
+    safeRun('dns-ssl', () => checkDnsSsl(project)).then(collect),
+    safeRun('domain', () => checkDomain(project)).then(collect),
+    safeRun('defillama', () => checkDefillama(project)).then(collect),
+    shared.xQueue(() => safeRun('x', () => checkX(project, ctx)).then(collect)),
+  ]
+
+  // Stage B: needs the HTML / discovered links
+  await httpPromise
+  const contentResult = await safeRun('content', () => checkContent(project, ctx))
+  ctx.links = contentResult.facts.links || {}
+  collect(contentResult)
+
+  const stageB = [
+    safeRun('sitemap', () => checkSitemap(project, ctx)).then(collect),
+    safeRun('github', () => checkGithub(project, ctx)).then(collect),
+    safeRun('discord', () => checkDiscord(project, ctx)).then(collect),
+    safeRun('telegram', () => checkTelegram(project, ctx)).then(collect),
+  ]
+
+  await Promise.all([...stageA, ...stageB])
+
+  const { score, verdict } = scoreVerdict(allEvidence)
+  const order = { bad: 0, warn: 1, good: 2, info: 3 }
+  allEvidence.sort((a, b) => order[a.level] - order[b.level])
+
+  emit({
+    type: 'project-done',
+    projectId: project.id,
+    score,
+    verdict,
+    facts: allFacts,
+    evidence: allEvidence,
+  })
+}
+
+function makeQueue(concurrency) {
+  let active = 0
+  const waiting = []
+  const next = () => {
+    if (active >= concurrency || !waiting.length) return
+    active++
+    const { fn, resolve, reject } = waiting.shift()
+    fn().then(resolve, reject).finally(() => {
+      active--
+      next()
+    })
+  }
+  return (fn) =>
+    new Promise((resolve, reject) => {
+      waiting.push({ fn, resolve, reject })
+      next()
+    })
+}
+
+/**
+ * Runs the full deep-check pipeline over all projects.
+ * emit(event) is called with NDJSON-able progress events.
+ */
+export async function runPipeline(projects, { env, store, launchBrowser }, emit) {
+  let browserPromise = null
+  const getBrowser = () => {
+    if (!browserPromise) {
+      browserPromise = launchBrowser().catch((err) => {
+        console.error('[pipeline] browser launch failed:', err.message)
+        return null
+      })
+    }
+    return browserPromise
+  }
+
+  // X checks run one at a time — the syndication endpoint 429s under parallel bursts.
+  // xState tracks throttle failures so syndication is skipped once it's clearly rate-limited.
+  const shared = { env, store, getBrowser, xQueue: makeQueue(1), xState: { throttleFailures: 0 } }
+  const projectQueue = makeQueue(PROJECT_CONCURRENCY)
+
+  emit({ type: 'start', total: projects.length })
+  await Promise.all(
+    projects.map((p) =>
+      projectQueue(() =>
+        checkProject(p, shared, emit).catch((err) =>
+          emit({ type: 'project-done', projectId: p.id, score: 0, verdict: 'error', facts: {}, evidence: [{ signal: 'pipeline', level: 'bad', label: 'Check failed', detail: err.message, delta: 0 }] })
+        )
+      )
+    )
+  )
+
+  store?.save()
+  if (browserPromise) {
+    const browser = await browserPromise
+    await browser?.close().catch(() => {})
+  }
+  emit({ type: 'done' })
+}

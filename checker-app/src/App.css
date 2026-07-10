@@ -301,6 +301,10 @@ body {
   color: #a29bfe;
 }
 
+.dropzone-restore {
+  margin-top: 10px;
+}
+
 .spin {
   display: inline-block;
   animation: spin 1s linear infinite;
@@ -485,3 +489,112 @@ tbody tr[data-ws='dead'] {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.55; }
 }
+
+/* ── Deep check: score & verdict ── */
+.badge.likely-active {
+  background: rgba(0, 206, 201, 0.18);
+  color: #00cec9;
+}
+
+.summary-card.likely-active {
+  background: rgba(0, 206, 201, 0.15);
+  border-color: #00cec9;
+  color: #00cec9;
+}
+
+.col-score {
+  width: 60px;
+  text-align: center;
+}
+
+.score {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.score-active        { color: #00b894; }
+.score-likely-active { color: #00cec9; }
+.score-unclear       { color: #fdcb6e; }
+.score-likely-dead   { color: #e17055; }
+.score-dead, .score-error { color: #ff7675; }
+
+.checking-dots {
+  color: var(--text-dim);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+/* ── Expandable evidence rows ── */
+.col-expand {
+  width: 36px;
+  text-align: center;
+}
+
+.btn-expand {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.btn-expand:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.row-expanded td {
+  border-bottom: none;
+}
+
+.detail-row td {
+  padding: 0 14px 14px 54px;
+  background: var(--surface-2);
+}
+
+.evidence-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 12px;
+}
+
+.evidence-item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 0.82rem;
+}
+
+.ev-dot { font-size: 0.7rem; }
+.ev-good .ev-dot { color: #00b894; }
+.ev-warn .ev-dot { color: #fdcb6e; }
+.ev-bad  .ev-dot { color: #ff7675; }
+.ev-info .ev-dot { color: var(--text-dim); }
+
+.ev-signal {
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  min-width: 70px;
+}
+
+.ev-label {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.ev-detail {
+  color: var(--text-muted);
+}
+
+.ev-delta {
+  margin-left: auto;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.ev-delta.pos { color: #00b894; }
+.ev-delta.neg { color: #ff7675; }

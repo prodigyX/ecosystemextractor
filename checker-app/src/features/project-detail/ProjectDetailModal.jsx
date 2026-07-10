@@ -1,7 +1,6 @@
 import { Modal } from '../../shared/components/Modal.jsx'
-import { QUALITY_LABELS, TIER_COLORS, VERDICT_BLURBS, computeConfidence } from '../../shared/domain/scoring.js'
+import { VERDICT_BLURBS, computeConfidence } from '../../shared/domain/scoring.js'
 import { ScoreGauge } from './ScoreGauge.jsx'
-import { ScoreBreakdown } from './ScoreBreakdown.jsx'
 import { ScoreHistoryChart } from './ScoreHistoryChart.jsx'
 import { CategoryTiles } from './CategoryTiles.jsx'
 import { ActivityOverview } from './ActivityOverview.jsx'
@@ -9,13 +8,11 @@ import { RecentSignals } from './RecentSignals.jsx'
 import { RiskIndicators } from './RiskIndicators.jsx'
 import { SimpleMarkdown } from './SimpleMarkdown.jsx'
 
-function fmtRelative(iso) {
-  if (!iso) return null
-  const secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
-  if (secs < 60) return 'just now'
-  if (secs < 3600) return `${Math.floor(secs / 60)}m ago`
-  if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`
-  return `${Math.floor(secs / 86400)}d ago`
+function fmtCheckedAt(iso) {
+  const date = new Date(iso)
+  return Number.isNaN(date.getTime())
+    ? 'recently'
+    : date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
 }
 
 function xHandle(url) {
@@ -46,10 +43,9 @@ export function ProjectDetailModal({ project, result, isFavorite, onToggleFavori
   const evidence = result?.evidence ?? []
   const history = result?.history ?? []
   const confidence = hasDeepResult ? computeConfidence(evidence) : null
-  const [, qualityWord] = hasDeepResult ? (QUALITY_LABELS[result.verdict] ?? [null, '']) : [null, '']
 
   return (
-    <Modal title={project.name} onClose={onClose} size="xl">
+    <Modal title="Project health report" onClose={onClose} size="xl">
       <div className="detail-header">
         {project.icon ? (
           <img src={project.icon} alt="" className="detail-icon" />
@@ -57,19 +53,10 @@ export function ProjectDetailModal({ project, result, isFavorite, onToggleFavori
           <div className="detail-icon detail-icon-fallback">{project.name.charAt(0).toUpperCase()}</div>
         )}
         <div className="detail-header-text">
+          <div className="detail-eyebrow">Project intelligence</div>
           <div className="detail-header-title-row">
             <h3 className="detail-name">{project.name}</h3>
             {project.featured && <span className="detail-featured">★ Featured</span>}
-            <button
-              type="button"
-              className={`btn-star ${isFavorite ? 'btn-star-active' : ''}`}
-              onClick={onToggleFavorite}
-              aria-pressed={isFavorite}
-              aria-label={isFavorite ? `Remove ${project.name} from watchlist` : `Add ${project.name} to watchlist`}
-              title={isFavorite ? 'Remove from watchlist' : 'Add to watchlist'}
-            >
-              {isFavorite ? '★' : '☆'}
-            </button>
           </div>
           {project.description && <p className="detail-description">{project.description}</p>}
           {project.categories?.length > 0 && (
@@ -82,24 +69,38 @@ export function ProjectDetailModal({ project, result, isFavorite, onToggleFavori
           <div className="detail-links">
             {project.website && (
               <a href={project.website} target="_blank" rel="noopener noreferrer">
-                Website ↗
+                <span aria-hidden="true">◎</span> Website <span aria-hidden="true">↗</span>
               </a>
             )}
             {project.x && (
               <a href={project.x} target="_blank" rel="noopener noreferrer">
-                X (Twitter) {xHandle(project.x)} ↗
+                <span aria-hidden="true">𝕏</span> {xHandle(project.x)} <span aria-hidden="true">↗</span>
               </a>
             )}
             {facts.githubUrl && (
               <a href={facts.githubUrl} target="_blank" rel="noopener noreferrer">
-                GitHub ↗
+                <span aria-hidden="true">⌘</span> GitHub <span aria-hidden="true">↗</span>
               </a>
             )}
           </div>
         </div>
-        {result?.checkedAt && (
-          <div className="detail-checked">Last checked: {fmtRelative(result.checkedAt)}</div>
-        )}
+        <div className="detail-header-actions">
+          <button
+            type="button"
+            className={`btn-watchlist ${isFavorite ? 'btn-watchlist-active' : ''}`}
+            onClick={onToggleFavorite}
+            aria-pressed={isFavorite}
+            aria-label={isFavorite ? `Remove ${project.name} from watchlist` : `Add ${project.name} to watchlist`}
+          >
+            <span aria-hidden="true">{isFavorite ? '★' : '☆'}</span>
+            {isFavorite ? 'Watching' : 'Watchlist'}
+          </button>
+          {result?.checkedAt && (
+            <time className="detail-checked" dateTime={result.checkedAt}>
+              <span aria-hidden="true">●</span> Checked {fmtCheckedAt(result.checkedAt)}
+            </time>
+          )}
+        </div>
       </div>
 
       {!hasDeepResult ? (
@@ -110,53 +111,89 @@ export function ProjectDetailModal({ project, result, isFavorite, onToggleFavori
         </p>
       ) : (
         <>
-          <div className="detail-score-row">
-            <div className="detail-card detail-score-card">
-              <div className="detail-score-gauge-col">
-                <ScoreGauge score={result.score} verdict={result.verdict} />
-                <div className="detail-verdict-word" style={{ color: TIER_COLORS[result.verdict] }}>
-                  {qualityWord}
+          <section className="detail-section" aria-labelledby="detail-overview-heading">
+            <div className="detail-section-heading">
+              <div>
+                <div className="detail-section-kicker">Deep check overview</div>
+                <h4 id="detail-overview-heading">Ecosystem health</h4>
+              </div>
+              <p>Live signals grouped into a single vitality score.</p>
+            </div>
+
+            <div className="detail-score-row">
+              <div className="detail-card detail-score-card">
+                <div className="detail-card-heading">
+                  <div>
+                    <span className="detail-card-kicker">Overall vitality</span>
+                    <h5>Health score</h5>
+                  </div>
+                  {confidence && (
+                    <div
+                      className={`detail-confidence confidence-${confidence.level}`}
+                      title={confidence.detail}
+                      aria-label={`${confidence.label}. ${confidence.detail}`}
+                    >
+                      <span aria-hidden="true">●</span> {confidence.label}
+                    </div>
+                  )}
                 </div>
-                <p className="detail-verdict-blurb">{VERDICT_BLURBS[result.verdict]}</p>
-                {confidence && (
-                  <div className={`detail-confidence confidence-${confidence.level}`} title={confidence.detail}>
-                    {confidence.label} ⓘ
+                <div className="detail-score-card-body">
+                  <div className="detail-score-gauge-col">
+                    <ScoreGauge score={result.score} verdict={result.verdict} />
+                    <p className="detail-verdict-blurb">{VERDICT_BLURBS[result.verdict]}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="detail-card detail-trend-card">
+                <div className="detail-card-heading">
+                  <div>
+                    <span className="detail-card-kicker">Score history</span>
+                    <h5>Vitality trend</h5>
+                  </div>
+                  {history.length >= 2 && <span className="detail-trend-count">{history.length} checks</span>}
+                </div>
+                {history.length >= 2 ? (
+                  <>
+                    <ScoreHistoryChart history={history} />
+                    <div className="detail-trend-meta">Each point represents a completed deep check.</div>
+                  </>
+                ) : (
+                  <div className="detail-history-empty">
+                    <div className="detail-history-icon" aria-hidden="true">↗</div>
+                    <strong>Your trend starts here</strong>
+                    <p>Run Deep Check again later to compare this score with a new snapshot.</p>
+                    <span>1 of 2 checks recorded</span>
                   </div>
                 )}
               </div>
-              <ScoreBreakdown evidence={evidence} />
             </div>
 
-            <div className="detail-card detail-trend-card">
-              <div className="detail-card-title">Vitality Score Trend</div>
-              {history.length >= 2 ? (
-                <>
-                  <ScoreHistoryChart history={history} />
-                  <div className="detail-trend-meta">{history.length} checks recorded</div>
-                </>
-              ) : (
-                <p className="empty detail-history-empty">
-                  Not enough history yet — run Deep Check again on this project to build a trend.
-                </p>
-              )}
-            </div>
-          </div>
+            <CategoryTiles evidence={evidence} />
+          </section>
 
-          <CategoryTiles evidence={evidence} />
-
-          <div className="detail-panels">
-            <div className="detail-panel detail-panel-activity">
-              <h4 className="detail-panel-title">Activity Overview</h4>
-              <ActivityOverview facts={facts} />
+          <section className="detail-section" aria-labelledby="detail-signals-heading">
+            <div className="detail-section-heading detail-section-heading-compact">
+              <div>
+                <div className="detail-section-kicker">Evidence</div>
+                <h4 id="detail-signals-heading">Signal detail</h4>
+              </div>
+              <p>What the latest check found across the project.</p>
             </div>
-            <div className="detail-panel">
-              <h4 className="detail-panel-title">Recent Signals</h4>
-              <RecentSignals evidence={evidence} />
+            <div className="detail-panels">
+              <div className="detail-panel detail-panel-activity">
+                <h4 className="detail-panel-title">Activity Overview</h4>
+                <ActivityOverview facts={facts} />
+              </div>
+              <div className="detail-panel">
+                <h4 className="detail-panel-title">Recent Signals</h4>
+                <RecentSignals evidence={evidence} />
+              </div>
+              <div className="detail-panel">
+                <RiskIndicators evidence={evidence} verdict={result.verdict} />
+              </div>
             </div>
-            <div className="detail-panel">
-              <RiskIndicators evidence={evidence} verdict={result.verdict} />
-            </div>
-          </div>
+          </section>
         </>
       )}
 

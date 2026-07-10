@@ -10,14 +10,15 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS
  * @param {{score: number, verdict: import('../../shared/domain/scoring.js').Verdict}} props
  */
 export function ScoreGauge({ score, verdict }) {
-  const clamped = Math.max(0, Math.min(100, score))
+  const numericScore = Number.isFinite(score) ? score : 0
+  const clamped = Math.max(0, Math.min(100, numericScore))
   const offset = CIRCUMFERENCE * (1 - clamped / 100)
   const color = TIER_COLORS[verdict] ?? '#a39289'
   const [, quality] = QUALITY_LABELS[verdict] ?? [null, '—']
 
   return (
-    <div className="score-gauge">
-      <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
+    <div className="score-gauge" role="img" aria-label={`Vitality score ${clamped} out of 100, rated ${quality}`}>
+      <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} aria-hidden="true">
         <circle
           cx={SIZE / 2}
           cy={SIZE / 2}
@@ -40,7 +41,7 @@ export function ScoreGauge({ score, verdict }) {
         />
       </svg>
       <div className="score-gauge-center">
-        <span className="score-gauge-num">{score}</span>
+        <span className="score-gauge-num">{clamped}</span>
         <span className="score-gauge-max">/100</span>
       </div>
       <div className="score-gauge-quality" style={{ color }}>{quality}</div>

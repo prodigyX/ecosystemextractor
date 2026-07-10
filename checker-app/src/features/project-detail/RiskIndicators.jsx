@@ -9,8 +9,11 @@ const MAX_ITEMS = 6
  * @param {{evidence: Array<{level: string, label: string}>, verdict: string|undefined}} props
  */
 export function RiskIndicators({ evidence, verdict }) {
-  // Evidence already arrives sorted bad -> warn -> good -> info from the server.
-  const items = evidence.filter((e) => e.level !== 'info').slice(0, MAX_ITEMS)
+  const severity = { bad: 0, warn: 1 }
+  const items = [...evidence]
+    .filter((e) => e.level === 'bad' || e.level === 'warn')
+    .sort((a, b) => severity[a.level] - severity[b.level])
+    .slice(0, MAX_ITEMS)
 
   return (
     <div className="risk-indicators">
@@ -19,12 +22,15 @@ export function RiskIndicators({ evidence, verdict }) {
         <VerdictBadge verdict={verdict} />
       </div>
       {items.length === 0 ? (
-        <p className="empty">No notable findings yet.</p>
+        <div className="risk-empty">
+          <span aria-hidden="true">✓</span>
+          <div><strong>No material risks detected</strong><p>The latest check found no warning or critical signals.</p></div>
+        </div>
       ) : (
         <div className="risk-list">
           {items.map((e, i) => (
             <div key={i} className={`risk-item risk-${e.level}`}>
-              <span className="risk-mark" aria-hidden="true">{e.level === 'good' ? '✓' : '✗'}</span>
+              <span className="risk-mark" aria-hidden="true">!</span>
               <span>{e.label}</span>
             </div>
           ))}

@@ -16,6 +16,7 @@ function fmtShortDate(iso) {
  * @param {{history: Array<{ts: string, score: number}>}} props
  */
 export function ScoreHistoryChart({ history }) {
+  const gradientId = useId()
   const n = history.length
   const xStep = n > 1 ? (WIDTH - PAD_X * 2) / (n - 1) : 0
   const yFor = (score) => HEIGHT - PAD_Y - (score / 100) * (HEIGHT - PAD_Y * 2)
@@ -27,14 +28,20 @@ export function ScoreHistoryChart({ history }) {
   const last = points[n - 1]
 
   return (
-    <svg className="history-chart" viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="none">
+    <svg
+      className="history-chart"
+      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+      preserveAspectRatio="none"
+      role="img"
+      aria-label={`Vitality score trend across ${history.length} checks. Latest score ${last.score} out of 100.`}
+    >
       <defs>
-        <linearGradient id="history-fill" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#8c7feb" stopOpacity="0.35" />
           <stop offset="100%" stopColor="#8c7feb" stopOpacity="0" />
         </linearGradient>
       </defs>
-      <path d={areaPath} fill="url(#history-fill)" stroke="none" />
+      <path d={areaPath} fill={`url(#${gradientId})`} stroke="none" />
       <path d={linePath} fill="none" stroke="#8c7feb" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
       {points.map((p, i) => (
         <circle key={i} cx={p.x} cy={p.y} r={i === n - 1 ? 4 : 2.5} fill={i === n - 1 ? '#8c7feb' : '#a99cf5'}>
@@ -47,3 +54,4 @@ export function ScoreHistoryChart({ history }) {
     </svg>
   )
 }
+import { useId } from 'react'

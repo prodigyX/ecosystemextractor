@@ -22,20 +22,23 @@ const TABS = [
 export function RecentSignals({ evidence }) {
   const [tab, setTab] = useState('all')
   const filtered = tab === 'all' ? evidence : evidence.filter((e) => tabOf(e.level) === tab)
+  const counts = Object.fromEntries(TABS.map(({ key }) => [
+    key,
+    key === 'all' ? evidence.length : evidence.filter((e) => tabOf(e.level) === key).length,
+  ]))
 
   return (
     <div className="recent-signals">
-      <div className="signals-tabs" role="tablist">
+      <div className="signals-tabs" aria-label="Filter recent signals">
         {TABS.map((t) => (
           <button
             key={t.key}
             type="button"
-            role="tab"
-            aria-selected={tab === t.key}
+            aria-pressed={tab === t.key}
             className={`signals-tab ${tab === t.key ? 'signals-tab-active' : ''}`}
             onClick={() => setTab(t.key)}
           >
-            {t.label}
+            {t.label} <span>{counts[t.key]}</span>
           </button>
         ))}
       </div>
@@ -45,7 +48,7 @@ export function RecentSignals({ evidence }) {
       ) : (
         <div className="signals-list">
           {filtered.map((e, i) => (
-            <div key={i} className={`signals-item ev-${e.level}`}>
+            <div key={`${e.signal ?? 'signal'}-${e.level}-${e.label}-${e.detail ?? ''}-${i}`} className={`signals-item ev-${e.level}`}>
               <span className="ev-dot">{EVIDENCE_ICON[e.level] ?? '○'}</span>
               <div className="signals-item-text">
                 <span className="ev-label">{e.label}</span>

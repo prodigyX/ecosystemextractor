@@ -2,7 +2,8 @@
 // hunting through the signal implementations.
 export const BERACHAIN_DIRECTORY_URL = 'https://explore.berachain.com/'
 
-// Short cache for conclusive X results that do not contain a last-post date.
+// Short cache for X existence/follower profile data. This never suppresses a
+// last-post lookup when the cached result has no last-post timestamp.
 export const X_RESULT_CACHE_ENABLED = true
 export const X_RESULT_CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
 

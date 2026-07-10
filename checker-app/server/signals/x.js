@@ -369,15 +369,14 @@ export async function checkX(project, ctx) {
   const postCheckedAt = new Date(cached?.postCheckedAt ?? cached?.checkedAt ?? 0).getTime()
   const profileAge = Number.isNaN(profileCheckedAt) ? Infinity : Date.now() - profileCheckedAt
   const cachedAge = Number.isNaN(postCheckedAt) ? Infinity : Date.now() - postCheckedAt
-  const recentResultCached = X_RESULT_CACHE_ENABLED &&
+  const recentProfileCached = X_RESULT_CACHE_ENABLED &&
     cached?.result?.exists != null && profileAge < X_RESULT_CACHE_TTL_MS
   const recentLastPostCached = X_LAST_POST_CACHE_ENABLED &&
     Boolean(cached?.result?.latestPost) && cachedAge < X_LAST_POST_CACHE_TTL_MS
-  const cacheHit = recentResultCached || recentLastPostCached
-  const freshProfileCached = cacheHit
-  // A recent general result caches negative results briefly; a successful
-  // last-post record gets the longer independently configurable TTL.
-  const freshPostCached = cacheHit
+  const freshProfileCached = recentProfileCached || recentLastPostCached
+  // Only a real, unexpired timestamp may suppress the timeline requests.
+  // Cached profile/follower data alone must not count as a post result.
+  const freshPostCached = recentLastPostCached
   const staleCached = X_RESULT_CACHE_ENABLED &&
     cached?.result?.latestPost && cachedAge < X_STALE_POST_CACHE_TTL_MS
     ? cached.result
@@ -502,7 +501,7 @@ export async function checkX(project, ctx) {
   facts.xPostSource = postSource
   facts.xSource = postSource || profileSource
 
-  if (ctx.store && result.exists != null && !cacheHit) {
+  if (ctx.store && result.exists != null && !recentLastPostCached) {
     const livePost = result.latestPost && ['official-api', 'syndication', 'puppeteer'].includes(postSource)
     ctx.store.set(cacheKey, {
       result,

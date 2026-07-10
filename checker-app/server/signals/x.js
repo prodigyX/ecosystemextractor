@@ -1,4 +1,14 @@
 import { fetchTimeout, ev, daysAgo, fmtDate } from '../util.js'
+import {
+  X_RESULT_CACHE_ENABLED,
+  X_RESULT_CACHE_TTL_MS,
+  X_LAST_POST_CACHE_ENABLED,
+  X_LAST_POST_CACHE_TTL_MS,
+  X_LAST_POST_AGE_DAYS,
+  X_STALE_POST_CACHE_TTL_MS,
+  X_SYNDICATION_COOLDOWN_MS,
+  X_SYNDICATION_INTERVAL_MS,
+} from '../config.js'
 
 export function xHandleFromUrl(url) {
   const m = url.match(/(?:x\.com|twitter\.com)\/@?([\w]+)/i)
@@ -13,13 +23,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 // The unauthenticated syndication endpoint throttles sustained batches. Keeping
 // requests to about six per minute lets more projects complete before that
 // happens, while the optional official API below avoids this limit entirely.
-const SYNDICATION_INTERVAL_MS = 10000
-const SYNDICATION_COOLDOWN_MS = 15 * 60 * 1000
 let nextAllowedAt = 0
 let syndicationBlockedUntil = 0
 async function paced() {
   const wait = nextAllowedAt - Date.now()
-  nextAllowedAt = Math.max(Date.now(), nextAllowedAt) + SYNDICATION_INTERVAL_MS
+  nextAllowedAt = Math.max(Date.now(), nextAllowedAt) + X_SYNDICATION_INTERVAL_MS
   if (wait > 0) await sleep(wait)
 }
 
@@ -103,7 +111,7 @@ async function viaSyndication(handle, xState) {
     const retrySeconds = Number(retryAfter)
     const cooldownMs = Number.isFinite(retrySeconds) && retrySeconds > 0
       ? retrySeconds * 1000
-      : SYNDICATION_COOLDOWN_MS
+      : X_SYNDICATION_COOLDOWN_MS
     syndicationBlockedUntil = Date.now() + cooldownMs
     if (xState) {
       xState.syndicationBlocked = true
@@ -266,19 +274,19 @@ export function lastPostEvidence(handle, latestPost, unavailableDetail = null) {
   if (age == null) {
     return metricEvidence('x-last-post', 'info', 'X last post date invalid', `@${handle}`, 0)
   }
-  if (age <= 30) {
-    return metricEvidence('x-last-post', 'good', 'X active (posted <30d)', `@${handle} · ${fmtDate(latestPost)}`, 15)
+  if (age <= X_LAST_POST_AGE_DAYS.active) {
+    return metricEvidence('x-last-post', 'good', `X active (posted ≤${X_LAST_POST_AGE_DAYS.active}d)`, `@${handle} · ${fmtDate(latestPost)}`, 15)
   }
-  if (age <= 90) {
-    return metricEvidence('x-last-post', 'good', 'X recent (posted <90d)', `@${handle} · ${fmtDate(latestPost)}`, 8)
+  if (age <= X_LAST_POST_AGE_DAYS.recent) {
+    return metricEvidence('x-last-post', 'good', `X recent (posted ≤${X_LAST_POST_AGE_DAYS.recent}d)`, `@${handle} · ${fmtDate(latestPost)}`, 8)
   }
-  if (age <= 180) {
-    return metricEvidence('x-last-post', 'warn', 'X quiet (3–6 months)', `@${handle} · ${fmtDate(latestPost)}`, -5)
+  if (age <= X_LAST_POST_AGE_DAYS.quiet) {
+    return metricEvidence('x-last-post', 'warn', `X quiet (${X_LAST_POST_AGE_DAYS.recent + 1}–${X_LAST_POST_AGE_DAYS.quiet}d)`, `@${handle} · ${fmtDate(latestPost)}`, -5)
   }
-  if (age <= 365) {
-    return metricEvidence('x-last-post', 'bad', 'X silent >6 months — likely no progress', `@${handle} · last post ${fmtDate(latestPost)}`, -18)
+  if (age <= X_LAST_POST_AGE_DAYS.silent) {
+    return metricEvidence('x-last-post', 'bad', `X silent >${X_LAST_POST_AGE_DAYS.quiet}d — likely no progress`, `@${handle} · last post ${fmtDate(latestPost)}`, -18)
   }
-  return metricEvidence('x-last-post', 'bad', 'X silent >1 year — project likely abandoned', `@${handle} · last post ${fmtDate(latestPost)}`, -25)
+  return metricEvidence('x-last-post', 'bad', `X silent >${X_LAST_POST_AGE_DAYS.silent}d — project likely abandoned`, `@${handle} · last post ${fmtDate(latestPost)}`, -25)
 }
 
 function unavailablePostSummary(result, attempts) {
@@ -361,11 +369,17 @@ export async function checkX(project, ctx) {
   const postCheckedAt = new Date(cached?.postCheckedAt ?? cached?.checkedAt ?? 0).getTime()
   const profileAge = Number.isNaN(profileCheckedAt) ? Infinity : Date.now() - profileCheckedAt
   const cachedAge = Number.isNaN(postCheckedAt) ? Infinity : Date.now() - postCheckedAt
-  const FRESH_CACHE_MS = 24 * 60 * 60 * 1000
-  const STALE_CACHE_MS = 7 * 24 * 60 * 60 * 1000
-  const freshProfileCached = cached?.result?.exists != null && profileAge < FRESH_CACHE_MS
-  const freshPostCached = cached?.result?.latestPost && cachedAge < FRESH_CACHE_MS
-  const staleCached = cached?.result?.latestPost && cachedAge < STALE_CACHE_MS
+  const recentResultCached = X_RESULT_CACHE_ENABLED &&
+    cached?.result?.exists != null && profileAge < X_RESULT_CACHE_TTL_MS
+  const recentLastPostCached = X_LAST_POST_CACHE_ENABLED &&
+    Boolean(cached?.result?.latestPost) && cachedAge < X_LAST_POST_CACHE_TTL_MS
+  const cacheHit = recentResultCached || recentLastPostCached
+  const freshProfileCached = cacheHit
+  // A recent general result caches negative results briefly; a successful
+  // last-post record gets the longer independently configurable TTL.
+  const freshPostCached = cacheHit
+  const staleCached = X_RESULT_CACHE_ENABLED &&
+    cached?.result?.latestPost && cachedAge < X_STALE_POST_CACHE_TTL_MS
     ? cached.result
     : null
 
@@ -376,7 +390,7 @@ export async function checkX(project, ctx) {
   const postAttempts = []
 
   if (freshPostCached) {
-    postAttempts.push(attempt('cache', 'success'))
+    postAttempts.push(attempt('cache', cached.result.latestPost ? 'success' : 'cached'))
   }
 
   if (!postResult) {
@@ -488,32 +502,42 @@ export async function checkX(project, ctx) {
   facts.xPostSource = postSource
   facts.xSource = postSource || profileSource
 
+  if (ctx.store && result.exists != null && !cacheHit) {
+    const livePost = result.latestPost && ['official-api', 'syndication', 'puppeteer'].includes(postSource)
+    ctx.store.set(cacheKey, {
+      result,
+      checkedAt: new Date().toISOString(),
+      postCheckedAt: livePost ? new Date().toISOString() : cached?.postCheckedAt ?? null,
+    })
+  }
+
   if (!result.exists) {
     facts.xPostStatus = 'not-applicable'
+    const suspended = result.suspended === true
     evidence.push(
-      ev('bad', result.suspended ? 'X account suspended' : 'X account does not exist', `@${handle}`, -15)
+      ev(
+        'bad',
+        suspended ? 'X account suspended' : 'X account does not exist',
+        `@${handle} · confirmed unavailable`,
+        suspended ? -25 : -20
+      )
     )
     return { facts, evidence }
   }
 
   if (result.latestPost) {
-    facts.xPostStatus = postSource === 'stale-cache' ? 'cached' : 'available'
-    if (postSource === 'stale-cache') {
+    facts.xPostStatus = ['cache', 'stale-cache'].includes(postSource) ? 'cached' : 'available'
+    if (postSource === 'cache') {
+      facts.xPostDetail = 'Using the existing last-post record; X network requests were skipped.'
+    } else if (postSource === 'stale-cache') {
       facts.xPostDetail = 'Live timeline sources were unavailable; using a last-post date cached within the past 7 days.'
     }
   } else {
-    const summary = unavailablePostSummary(result, postAttempts)
+    const summary = postSource === 'cache'
+      ? { status: 'cached-unavailable', detail: 'Using a recent cached X result; no public post timestamp was available.' }
+      : unavailablePostSummary(result, postAttempts)
     facts.xPostStatus = summary.status
     facts.xPostDetail = summary.detail
-  }
-
-  if (ctx.store && result.exists) {
-    const livePost = result.latestPost && ['official-api', 'syndication', 'puppeteer'].includes(postSource)
-    ctx.store.set(cacheKey, {
-      result,
-      checkedAt: new Date().toISOString(),
-      postCheckedAt: livePost ? new Date().toISOString() : cached?.postCheckedAt ?? cached?.checkedAt ?? null,
-    })
   }
 
   // Audience size and posting recency are deliberately independent score

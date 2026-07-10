@@ -1,6 +1,5 @@
 import { UA } from './util.js'
-
-const BERACHAIN_URL = 'https://explore.berachain.com/'
+import { BERACHAIN_DIRECTORY_URL } from './config.js'
 
 /** Extracts the live project array with a caller-provided browser launcher. */
 export async function extractBerachainProjects(launchBrowser) {
@@ -9,7 +8,7 @@ export async function extractBerachainProjects(launchBrowser) {
     browser = await launchBrowser()
     const page = await browser.newPage()
     await page.setUserAgent(UA)
-    await page.goto(BERACHAIN_URL, { waitUntil: 'networkidle0', timeout: 45000 })
+    await page.goto(BERACHAIN_DIRECTORY_URL, { waitUntil: 'networkidle0', timeout: 45000 })
     await new Promise((resolve) => setTimeout(resolve, 3000))
 
     return await page.evaluate(() => {

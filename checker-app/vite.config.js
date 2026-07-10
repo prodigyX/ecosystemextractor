@@ -6,10 +6,10 @@ import { dirname, join } from 'node:path'
 import { runPipeline } from './server/pipeline.js'
 import { createStore } from './server/store.js'
 import { loadEnv } from './server/util.js'
+import { BERACHAIN_DIRECTORY_URL } from './server/config.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-const BERACHAIN_URL = 'https://explore.berachain.com/'
 
 function launchBrowser() {
   return puppeteer.launch({
@@ -140,7 +140,7 @@ function berachainExtractPlugin() {
           await page.setUserAgent(
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
           )
-          await page.goto(BERACHAIN_URL, { waitUntil: 'networkidle0', timeout: 45000 })
+          await page.goto(BERACHAIN_DIRECTORY_URL, { waitUntil: 'networkidle0', timeout: 45000 })
           await new Promise((r) => setTimeout(r, 3000))
 
           const projects = await page.evaluate(() => {

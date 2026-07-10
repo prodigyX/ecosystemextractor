@@ -1,4 +1,5 @@
 import { fetchTimeout, ev, daysAgo, fmtDate } from '../util.js'
+import { GITHUB_PUSH_AGE_DAYS, GITHUB_RESULT_CACHE_ENABLED, GITHUB_RESULT_CACHE_TTL_MS } from '../config.js'
 
 function ghHeaders(token) {
   const h = { Accept: 'application/vnd.github+json' }
@@ -22,9 +23,23 @@ async function ghJson(url, token) {
   return res.json()
 }
 
+function activityEvidence(facts) {
+  if (facts.archived) {
+    return ev('bad', 'GitHub repo archived', facts.repo, -25)
+  }
+
+  const age = daysAgo(facts.lastPush)
+  if (age == null) return ev('info', 'GitHub repo found, no push date', facts.repo, 0)
+  const detail = `${facts.repo} · ${fmtDate(facts.lastPush)}`
+  if (age <= GITHUB_PUSH_AGE_DAYS.active) return ev('good', `GitHub active (pushed ≤${GITHUB_PUSH_AGE_DAYS.active}d)`, detail, 15)
+  if (age <= GITHUB_PUSH_AGE_DAYS.recent) return ev('good', `GitHub recent (pushed ≤${GITHUB_PUSH_AGE_DAYS.recent}d)`, detail, 8)
+  if (age <= GITHUB_PUSH_AGE_DAYS.inactive) return ev('info', `GitHub quiet (pushed ≤${GITHUB_PUSH_AGE_DAYS.inactive}d)`, detail, 0)
+  return ev('warn', `GitHub inactive (>${GITHUB_PUSH_AGE_DAYS.inactive}d since push)`, detail, -10)
+}
+
 export async function checkGithub(project, ctx) {
   const evidence = []
-  const facts = { githubUrl: null, lastPush: null, archived: null, repo: null }
+  const facts = { githubUrl: null, lastPush: null, archived: null, repo: null, githubSource: null }
   const link = ctx.links?.github
   if (!link) {
     return { facts, evidence: [ev('info', 'No GitHub link found on site', null, 0)] }
@@ -33,6 +48,19 @@ export async function checkGithub(project, ctx) {
 
   const parsed = parseGithubUrl(link)
   if (!parsed) return { facts, evidence: [ev('info', 'Unrecognized GitHub URL', link, 0)] }
+  const cacheKey = `github:${parsed.owner.toLowerCase()}/${parsed.repo?.toLowerCase() ?? '*'}`
+  const cached = ctx.store?.get(cacheKey)
+  const checkedAt = new Date(cached?.checkedAt ?? 0).getTime()
+  const cacheAge = Number.isNaN(checkedAt) ? Infinity : Date.now() - checkedAt
+  if (
+    GITHUB_RESULT_CACHE_ENABLED &&
+    cached?.result?.repo &&
+    cacheAge < GITHUB_RESULT_CACHE_TTL_MS
+  ) {
+    Object.assign(facts, cached.result, { githubUrl: link, githubSource: 'cache' })
+    return { facts, evidence: [activityEvidence(facts)] }
+  }
+
   const token = ctx.env?.GITHUB_TOKEN
 
   try {
@@ -57,24 +85,12 @@ export async function checkGithub(project, ctx) {
     facts.repo = repoData.full_name
     facts.archived = repoData.archived === true
     facts.lastPush = repoData.pushed_at
-
-    if (facts.archived) {
-      evidence.push(ev('bad', 'GitHub repo archived', repoData.full_name, -25))
-      return { facts, evidence }
-    }
-
-    const age = daysAgo(repoData.pushed_at)
-    if (age == null) {
-      evidence.push(ev('info', 'GitHub repo found, no push date', repoData.full_name, 0))
-    } else if (age <= 30) {
-      evidence.push(ev('good', 'GitHub active (pushed <30d)', `${repoData.full_name} · ${fmtDate(repoData.pushed_at)}`, 15))
-    } else if (age <= 90) {
-      evidence.push(ev('good', 'GitHub recent (pushed <90d)', `${repoData.full_name} · ${fmtDate(repoData.pushed_at)}`, 8))
-    } else if (age <= 365) {
-      evidence.push(ev('info', 'GitHub quiet (pushed <1y)', `${repoData.full_name} · ${fmtDate(repoData.pushed_at)}`, 0))
-    } else {
-      evidence.push(ev('warn', 'GitHub inactive (>1y since push)', `${repoData.full_name} · ${fmtDate(repoData.pushed_at)}`, -10))
-    }
+    facts.githubSource = 'api'
+    ctx.store?.set(cacheKey, {
+      checkedAt: new Date().toISOString(),
+      result: { repo: facts.repo, archived: facts.archived, lastPush: facts.lastPush },
+    })
+    evidence.push(activityEvidence(facts))
   } catch (err) {
     evidence.push(ev('info', 'GitHub check failed', err.message, 0))
   }

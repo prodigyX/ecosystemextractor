@@ -1,4 +1,5 @@
 import { fetchTimeout, ev, daysAgo, fmtDate } from '../util.js'
+import { TELEGRAM_MESSAGE_AGE_DAYS } from '../config.js'
 
 export async function checkTelegram(project, ctx) {
   const evidence = []
@@ -33,14 +34,14 @@ export async function checkTelegram(project, ctx) {
     const latest = new Date(Math.max(...times))
     facts.telegramLastPost = latest.toISOString()
     const age = daysAgo(latest)
-    if (age <= 30) {
-      evidence.push(ev('good', 'Telegram active (<30d)', `@${handle} · ${fmtDate(latest)}`, 8))
-    } else if (age <= 90) {
-      evidence.push(ev('good', 'Telegram recent (<90d)', `@${handle} · ${fmtDate(latest)}`, 4))
-    } else if (age <= 365) {
-      evidence.push(ev('warn', 'Telegram quiet (<1y)', `@${handle} · ${fmtDate(latest)}`, -3))
+    if (age <= TELEGRAM_MESSAGE_AGE_DAYS.active) {
+      evidence.push(ev('good', `Telegram active (≤${TELEGRAM_MESSAGE_AGE_DAYS.active}d)`, `@${handle} · ${fmtDate(latest)}`, 8))
+    } else if (age <= TELEGRAM_MESSAGE_AGE_DAYS.recent) {
+      evidence.push(ev('good', `Telegram recent (≤${TELEGRAM_MESSAGE_AGE_DAYS.recent}d)`, `@${handle} · ${fmtDate(latest)}`, 4))
+    } else if (age <= TELEGRAM_MESSAGE_AGE_DAYS.inactive) {
+      evidence.push(ev('warn', `Telegram quiet (≤${TELEGRAM_MESSAGE_AGE_DAYS.inactive}d)`, `@${handle} · ${fmtDate(latest)}`, -3))
     } else {
-      evidence.push(ev('warn', 'Telegram dead (>1y)', `@${handle} · ${fmtDate(latest)}`, -8))
+      evidence.push(ev('warn', `Telegram dead (>${TELEGRAM_MESSAGE_AGE_DAYS.inactive}d)`, `@${handle} · ${fmtDate(latest)}`, -8))
     }
   } catch (err) {
     evidence.push(ev('info', 'Telegram check failed', err.message, 0))

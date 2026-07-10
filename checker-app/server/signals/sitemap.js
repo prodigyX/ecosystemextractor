@@ -1,4 +1,5 @@
 import { fetchTimeout, ev, daysAgo, fmtDate } from '../util.js'
+import { SITEMAP_UPDATE_AGE_DAYS } from '../config.js'
 
 const FEED_PATHS = ['/sitemap.xml', '/sitemap_index.xml', '/feed', '/rss', '/feed.xml', '/blog/rss.xml']
 
@@ -37,12 +38,12 @@ export async function checkSitemap(project, ctx = {}) {
         facts.lastPublished = latest.toISOString()
         facts.feedFound = path
         const age = daysAgo(latest)
-        if (age <= 90) {
-          evidence.push(ev('good', 'Site content updated recently', `${path} → ${fmtDate(latest)}`, 8))
-        } else if (age <= 365) {
-          evidence.push(ev('info', 'Site content updated within a year', `${path} → ${fmtDate(latest)}`, 2))
+        if (age <= SITEMAP_UPDATE_AGE_DAYS.recent) {
+          evidence.push(ev('good', `Site content updated within ${SITEMAP_UPDATE_AGE_DAYS.recent}d`, `${path} → ${fmtDate(latest)}`, 8))
+        } else if (age <= SITEMAP_UPDATE_AGE_DAYS.stale) {
+          evidence.push(ev('info', `Site content updated within ${SITEMAP_UPDATE_AGE_DAYS.stale}d`, `${path} → ${fmtDate(latest)}`, 2))
         } else {
-          evidence.push(ev('warn', 'Site content stale (>1 year)', `${path} → ${fmtDate(latest)}`, -5))
+          evidence.push(ev('warn', `Site content stale (>${SITEMAP_UPDATE_AGE_DAYS.stale}d)`, `${path} → ${fmtDate(latest)}`, -5))
         }
         return { facts, evidence }
       }

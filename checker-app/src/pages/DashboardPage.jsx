@@ -140,6 +140,14 @@ export function DashboardPage() {
 
   const handleLoadLastRun = () => handleLoadRun()
 
+  const handleRunNewCheck = () => {
+    if (busy) return
+    resetForNewLoad()
+    projectsState.setProjects([])
+    projectsState.setFileName(null)
+    projectsState.setParseError(null)
+  }
+
   const verdictCounts = deepDone ? computeVerdictCounts(projectsState.projects, deepCheck.deep) : null
   const quickCounts = !verdictCounts && quickDone ? computeQuickCounts(projectsState.projects) : null
   const showCheckPrompt = projectsState.projects.length > 0 &&
@@ -175,10 +183,8 @@ export function DashboardPage() {
         onFetchFromBerachain={handleFetchFromBerachain}
         fileInputRef={fileInputRef}
         onFileInput={onFileInput}
-        onStartCheck={handleStartCheck}
-        onStartDeepCheck={handleStartDeepCheck}
+        onRunNewCheck={handleRunNewCheck}
         onDownloadCsv={() => downloadCsv(projectsState.projects, deepCheck.deep)}
-        showCheckPrompt={showCheckPrompt}
         hasCheckResults={hasCheckResults}
         busy={busy}
       />

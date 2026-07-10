@@ -97,12 +97,6 @@ body {
   flex-wrap: wrap;
 }
 
-.header-check-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .header-data-menu {
   position: relative;
 }
@@ -729,14 +723,6 @@ body {
   .app {
     max-width: 100%;
     padding: 18px 12px;
-  }
-
-  .header-check-actions {
-    width: 100%;
-  }
-
-  .header-check-actions .btn {
-    flex: 1;
   }
 
   .source-gate,

@@ -14,10 +14,8 @@ import { fmtSavedAt } from '../lib/formatters.js'
  *   onFetchFromBerachain: () => void,
  *   fileInputRef: {current: HTMLInputElement|null},
  *   onFileInput: (e: React.ChangeEvent<HTMLInputElement>) => void,
- *   onStartCheck: () => void,
- *   onStartDeepCheck: () => void,
+ *   onRunNewCheck: () => void,
  *   onDownloadCsv: () => void,
- *   showCheckPrompt: boolean,
  *   hasCheckResults: boolean,
  *   busy: boolean,
  * }} props
@@ -35,10 +33,8 @@ export function Header({
   onFetchFromBerachain,
   fileInputRef,
   onFileInput,
-  onStartCheck,
-  onStartDeepCheck,
+  onRunNewCheck,
   onDownloadCsv,
-  showCheckPrompt,
   hasCheckResults,
   busy,
 }) {
@@ -88,15 +84,10 @@ export function Header({
           style={{ display: 'none' }}
           onChange={onFileInput}
         />
-        {hasProjects && !showCheckPrompt && (
-          <div className="header-check-actions" aria-label="Check actions">
-            <button className="btn btn-secondary" onClick={onStartCheck} disabled={busy}>
-              <span aria-hidden="true">⚡</span> {checking ? 'Checking…' : 'Quick Check'}
-            </button>
-            <button className="btn btn-primary" onClick={onStartDeepCheck} disabled={busy}>
-              <span aria-hidden="true">◇</span> {deepRunning ? 'Deep Checking…' : 'Deep Check'}
-            </button>
-          </div>
+        {hasProjects && hasCheckResults && (
+          <button className="btn btn-primary" onClick={onRunNewCheck} disabled={busy}>
+            <span aria-hidden="true">＋</span> Run a new check
+          </button>
         )}
         {hasProjects && hasCheckResults && (
           <button className="btn btn-secondary" onClick={onDownloadCsv} disabled={busy}>

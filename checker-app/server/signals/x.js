@@ -14,7 +14,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 // requests to about six per minute lets more projects complete before that
 // happens, while the optional official API below avoids this limit entirely.
 const SYNDICATION_INTERVAL_MS = 10000
+const SYNDICATION_COOLDOWN_MS = 15 * 60 * 1000
 let nextAllowedAt = 0
+let syndicationBlockedUntil = 0
 async function paced() {
   const wait = nextAllowedAt - Date.now()
   nextAllowedAt = Math.max(Date.now(), nextAllowedAt) + SYNDICATION_INTERVAL_MS
@@ -80,10 +82,14 @@ async function viaOfficialX(userId, token) {
 
 /** Unauthenticated Twitter syndication timeline. */
 async function viaSyndication(handle, xState) {
-  if (xState?.syndicationBlocked) {
+  const blockedUntil = Math.max(syndicationBlockedUntil, xState?.syndicationBlockedUntil ?? 0)
+  if (xState?.syndicationBlocked || blockedUntil > Date.now()) {
+    const detail = blockedUntil > Date.now()
+      ? `cooldown until ${new Date(blockedUntil).toISOString()}`
+      : 'skipped after an earlier HTTP 429 in this batch'
     return {
       result: null,
-      attempt: attempt('syndication', 'rate-limited', 'skipped after an earlier HTTP 429 in this batch'),
+      attempt: attempt('syndication', 'rate-limited', detail),
     }
   }
   await paced()
@@ -93,8 +99,16 @@ async function viaSyndication(handle, xState) {
     10000
   )
   if (res.status === 429) {
-    if (xState) xState.syndicationBlocked = true
     const retryAfter = res.headers.get('retry-after')
+    const retrySeconds = Number(retryAfter)
+    const cooldownMs = Number.isFinite(retrySeconds) && retrySeconds > 0
+      ? retrySeconds * 1000
+      : SYNDICATION_COOLDOWN_MS
+    syndicationBlockedUntil = Date.now() + cooldownMs
+    if (xState) {
+      xState.syndicationBlocked = true
+      xState.syndicationBlockedUntil = syndicationBlockedUntil
+    }
     return {
       result: null,
       attempt: attempt('syndication', 'rate-limited', retryAfter ? `HTTP 429 · retry after ${retryAfter}s` : 'HTTP 429'),
@@ -293,6 +307,34 @@ function unavailablePostSummary(result, attempts) {
   return { status: 'unavailable', detail }
 }
 
+function profileSnapshot(result) {
+  if (!result) return null
+  return {
+    exists: result.exists,
+    userId: result.userId ?? null,
+    followers: result.followers ?? null,
+    tweetCount: result.tweetCount ?? null,
+    protected: result.protected === true,
+    suspended: result.suspended === true,
+  }
+}
+
+function mergeProfile(current, next) {
+  if (!next) return current
+  return {
+    exists: next.exists ?? current?.exists,
+    userId: next.userId ?? current?.userId ?? null,
+    followers: next.followers ?? current?.followers ?? null,
+    tweetCount: next.tweetCount ?? current?.tweetCount ?? null,
+    protected: next.protected ?? current?.protected ?? false,
+    suspended: next.suspended ?? current?.suspended ?? false,
+  }
+}
+
+function runQueued(queue, fn) {
+  return queue ? queue(fn) : fn()
+}
+
 export async function checkX(project, ctx) {
   const evidence = []
   const facts = {
@@ -315,99 +357,120 @@ export async function checkX(project, ctx) {
 
   const cacheKey = `x:${handle.toLowerCase()}`
   const cached = ctx.store?.get(cacheKey)
+  const profileCheckedAt = new Date(cached?.checkedAt ?? 0).getTime()
   const postCheckedAt = new Date(cached?.postCheckedAt ?? cached?.checkedAt ?? 0).getTime()
+  const profileAge = Number.isNaN(profileCheckedAt) ? Infinity : Date.now() - profileCheckedAt
   const cachedAge = Number.isNaN(postCheckedAt) ? Infinity : Date.now() - postCheckedAt
   const FRESH_CACHE_MS = 24 * 60 * 60 * 1000
   const STALE_CACHE_MS = 7 * 24 * 60 * 60 * 1000
-  const freshCached = cached?.result?.latestPost && cachedAge < FRESH_CACHE_MS
+  const freshProfileCached = cached?.result?.exists != null && profileAge < FRESH_CACHE_MS
+  const freshPostCached = cached?.result?.latestPost && cachedAge < FRESH_CACHE_MS
   const staleCached = cached?.result?.latestPost && cachedAge < STALE_CACHE_MS
     ? cached.result
     : null
 
-  let result = null
-  let profileSource = null
-  let postSource = null
+  let profile = freshProfileCached ? profileSnapshot(cached.result) : null
+  let postResult = freshPostCached ? cached.result : null
+  let profileSource = freshProfileCached ? 'cache' : null
+  let postSource = freshPostCached ? 'cache' : null
   const postAttempts = []
 
-  if (freshCached) {
-    result = cached.result
-    profileSource = 'cache'
-    postSource = 'cache'
+  if (freshPostCached) {
     postAttempts.push(attempt('cache', 'success'))
   }
 
-  if (!result) {
-    let fx = null
-    try {
-      fx = await viaFxTwitter(handle)
-      if (fx) profileSource = 'fxtwitter'
-    } catch {
-      // Other strategies can still determine whether the account/timeline exists.
-    }
-
-    if (fx && !fx.exists) {
-      result = fx
-    } else if (fx?.protected) {
-      result = fx
-      postAttempts.push(attempt('profile', 'protected'))
-    } else {
-      let dated = null
-
-      if (fx?.userId && ctx.env?.X_BEARER_TOKEN) {
+  if (!postResult) {
+    // The official API needs a user ID, so its configured path starts with the
+    // lightweight profile lookup. The default unauthenticated path skips that
+    // request and lets syndication return profile + timeline data together.
+    if (ctx.env?.X_BEARER_TOKEN) {
+      if (!profile?.userId && profile?.exists !== false) {
         try {
-          const official = await viaOfficialX(fx.userId, ctx.env.X_BEARER_TOKEN)
+          const fx = await viaFxTwitter(handle)
+          if (fx) {
+            profile = profileSnapshot(fx)
+            profileSource = 'fxtwitter'
+          }
+        } catch {
+          // Fall through to public sources.
+        }
+      }
+
+      if (profile?.exists !== false && !profile?.protected && profile?.userId) {
+        try {
+          const official = await viaOfficialX(profile.userId, ctx.env.X_BEARER_TOKEN)
           postAttempts.push(official.attempt)
           if (official.result) {
-            dated = official.result
+            postResult = official.result
             postSource = 'official-api'
           }
         } catch (error) {
           postAttempts.push(attempt('official-api', 'failed', error.message))
         }
       }
+    }
 
-      const xState = ctx.xState
-      const syndicationDisabled = xState && (xState.throttleFailures || 0) >= 3
-      if (!dated && !syndicationDisabled) {
-        try {
-          const syndication = await viaSyndication(handle, xState)
-          postAttempts.push(syndication.attempt)
-          if (syndication.result) {
-            dated = syndication.result
-            postSource = 'syndication'
-          }
-        } catch (error) {
-          postAttempts.push(attempt('syndication', 'failed', error.message))
+    if (!postResult && profile?.exists !== false && !profile?.protected) {
+      try {
+        const syndication = await runQueued(
+          ctx.xTimelineQueue,
+          () => viaSyndication(handle, ctx.xState)
+        )
+        postAttempts.push(syndication.attempt)
+        if (syndication.result) {
+          const syndicationProfile = profileSnapshot(syndication.result)
+          profile = mergeProfile(profile, syndicationProfile)
+          if (syndicationProfile.followers != null) profileSource = 'syndication'
+          postResult = syndication.result
+          if (syndication.result.latestPost) postSource = 'syndication'
         }
-      } else if (!dated && syndicationDisabled) {
-        postAttempts.push(attempt('syndication', 'rate-limited', 'disabled after repeated HTTP 429 responses'))
-      }
-
-      if (!dated) {
-        try {
-          const browser = await viaPuppeteer(handle, ctx.getBrowser)
-          postAttempts.push(browser.attempt)
-          if (browser.result) {
-            dated = browser.result
-            if (browser.result.latestPost) postSource = 'puppeteer'
-          }
-        } catch (error) {
-          postAttempts.push(attempt('puppeteer', 'failed', error.message))
-        }
-      }
-
-      if (dated?.exists === false) {
-        result = { ...fx, ...dated }
-      } else if (dated?.latestPost) {
-        result = { ...fx, ...dated }
-      } else if (staleCached) {
-        result = { ...staleCached, ...fx, ...dated, latestPost: staleCached.latestPost }
-        postSource = 'stale-cache'
-        postAttempts.push(attempt('stale-cache', 'success', 'live timeline sources were unavailable'))
-      } else {
-        result = { ...fx, ...dated }
+      } catch (error) {
+        postAttempts.push(attempt('syndication', 'failed', error.message))
       }
     }
+
+    const needsProfile = profile?.exists == null ||
+      (profile.exists !== false && profile.followers == null)
+    const needsPost = !postResult?.latestPost && profile?.exists !== false && !profile?.protected
+    if (needsProfile || needsPost) {
+      const profilePromise = needsProfile
+        ? viaFxTwitter(handle).catch(() => null)
+        : Promise.resolve(null)
+      const browserPromise = needsPost
+        ? runQueued(ctx.xBrowserQueue, () => viaPuppeteer(handle, ctx.getBrowser))
+            .catch((error) => ({ result: null, attempt: attempt('puppeteer', 'failed', error.message) }))
+        : Promise.resolve(null)
+
+      // When the combined syndication call is unavailable, fetch the audience
+      // fallback and logged-out timeline concurrently.
+      const [fx, browser] = await Promise.all([profilePromise, browserPromise])
+      if (fx) {
+        profile = mergeProfile(profile, profileSnapshot(fx))
+        profileSource = 'fxtwitter'
+      }
+      if (browser) {
+        postAttempts.push(browser.attempt)
+        if (browser.result && profile?.exists !== false && !profile?.protected) {
+          postResult = browser.result
+          if (browser.result.latestPost) postSource = 'puppeteer'
+        }
+      }
+    }
+  }
+
+  let result
+  if (profile?.exists === false) {
+    result = profile
+  } else if (postResult?.exists === false) {
+    result = { ...profile, ...postResult }
+  } else if (postResult?.latestPost) {
+    result = { ...profile, ...postResult }
+  } else if (staleCached && profile?.exists !== false) {
+    result = { ...staleCached, ...profile, ...postResult, latestPost: staleCached.latestPost }
+    postSource = 'stale-cache'
+    postAttempts.push(attempt('stale-cache', 'success', 'live timeline sources were unavailable'))
+  } else {
+    result = { ...profile, ...postResult }
   }
 
   facts.xPostAttempts = postAttempts

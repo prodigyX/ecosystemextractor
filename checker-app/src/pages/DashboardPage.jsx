@@ -118,10 +118,10 @@ export function DashboardPage() {
     deepCheck.startDeepCheck()
   }
 
-  const handleLoadLastRun = () => {
-    const result = savedRun.loadLastRun()
+  const handleLoadRun = (id = null) => {
+    const result = savedRun.loadRun(id)
     if (result.status === 'error') {
-      projectsState.setParseError('Saved run is corrupted — could not load it.')
+      projectsState.setParseError('Saved history is corrupted — could not load it.')
       return
     }
     if (result.status === 'empty') return
@@ -132,7 +132,13 @@ export function DashboardPage() {
     deepCheck.setDeep(saved.deep ?? {})
     quick.reset()
     setExpanded(new Set())
+    setSearch('')
+    setStatusFilter('all')
+    setVerdictFilter(new Set())
+    setSelectedProjectId(null)
   }
+
+  const handleLoadLastRun = () => handleLoadRun()
 
   const verdictCounts = deepDone ? computeVerdictCounts(projectsState.projects, deepCheck.deep) : null
   const quickCounts = !verdictCounts && quickDone ? computeQuickCounts(projectsState.projects) : null
@@ -184,6 +190,8 @@ export function DashboardPage() {
           onDrop={onDrop}
           onBrowseClick={() => fileInputRef.current?.click()}
           onFetchFromBerachain={handleFetchFromBerachain}
+          history={savedRun.history}
+          onLoadHistory={handleLoadRun}
         />
       ) : (
         <>

@@ -111,7 +111,7 @@ export function Header({
               aria-disabled={busy}
               onClick={(event) => { if (busy) event.preventDefault() }}
             >
-              Data <span aria-hidden="true">⌄</span>
+              <span>Data</span><span className="header-data-chevron" aria-hidden="true" />
             </summary>
             <div className="header-data-popover">
               <button

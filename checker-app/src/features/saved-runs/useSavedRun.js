@@ -1,20 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { readSavedMeta, saveSnapshot, loadSnapshot, clearSnapshot } from './savedRunsService.js'
+import { readSavedHistoryMeta, saveSnapshot, loadSnapshot, clearSnapshot } from './savedRunsService.js'
 
 /**
- * Owns persistence of the "last completed run" to localStorage: auto-saves once
- * a quick check or deep check finishes with a complete result, and exposes a
- * way to restore the saved snapshot.
+ * Owns a rolling localStorage history of completed runs: auto-saves once a
+ * quick check or deep check finishes and exposes ways to restore the newest or
+ * a specifically selected historical snapshot.
  *
- * Auto-save is triggered by watching `checking`/`deepRunning` transition from
- * true to false (i.e. a check that was actually running just finished) AND the
- * corresponding `quickDone`/`deepDone` flag being true at that moment. This
- * distinguishes "a check I ran just completed" from "the saved run was just
- * restored" (which sets `quickDone`/`deepDone` true without ever flipping
- * `checking`/`deepRunning`) and from "the check failed" (which flips
- * `checking`/`deepRunning` back to false without `quickDone`/`deepDone` ever
- * becoming true) — without needing a manually set/cleared "did I just run"
- * flag threaded through the check-starting functions.
+ * Auto-save arms when `checking`/`deepRunning` becomes true, then waits until
+ * the corresponding completed state is visible. Keeping that pending state
+ * across renders handles React updates where the running flag settles just
+ * before the final project result. Restoring a snapshot does not arm a save,
+ * so loading history cannot create duplicate records.
  *
  * @param {{
  *   projects: import('../../shared/domain/projects.js').Project[],
@@ -27,8 +23,9 @@ import { readSavedMeta, saveSnapshot, loadSnapshot, clearSnapshot } from './save
  * }} state
  */
 export function useSavedRun({ projects, deep, fileName, checking, deepRunning, quickDone, deepDone }) {
-  const [savedMeta, setSavedMeta] = useState(() => readSavedMeta())
+  const [history, setHistory] = useState(() => readSavedHistoryMeta())
   const [loadedAt, setLoadedAt] = useState(null)
+  const savedMeta = history[0] ?? null
 
   // Refs mirror the latest values so saveRun always captures the final results,
   // without saveRun needing to change identity (and re-run the effect below)
@@ -43,50 +40,62 @@ export function useSavedRun({ projects, deep, fileName, checking, deepRunning, q
     fileNameRef.current = fileName
   })
 
-  const saveRun = useCallback(() => {
+  const saveRun = useCallback((checkType) => {
     if (!projectsRef.current.length) return
     try {
       const snapshot = saveSnapshot({
         fileName: fileNameRef.current,
         projects: projectsRef.current,
         deep: deepRef.current,
+        checkType,
       })
-      setSavedMeta({ savedAt: snapshot.savedAt, fileName: snapshot.fileName, count: snapshot.projects.length })
+      setHistory(readSavedHistoryMeta())
       setLoadedAt(snapshot.savedAt)
     } catch {
       /* localStorage full or unavailable — non-fatal */
     }
   }, [])
 
-  const prevChecking = useRef(checking)
-  const prevDeepRunning = useRef(deepRunning)
+  // Completion state updates can land one render after the running flag turns
+  // false. Keep each run armed until its final results are actually visible.
+  const quickSavePending = useRef(false)
+  const deepSavePending = useRef(false)
   useEffect(() => {
-    const quickJustFinished = prevChecking.current && !checking
-    const deepJustFinished = prevDeepRunning.current && !deepRunning
-    prevChecking.current = checking
-    prevDeepRunning.current = deepRunning
-    if ((quickJustFinished && quickDone) || (deepJustFinished && deepDone)) {
-      saveRun()
+    if (checking) quickSavePending.current = true
+    if (deepRunning) deepSavePending.current = true
+
+    if (deepSavePending.current && !deepRunning && deepDone) {
+      deepSavePending.current = false
+      saveRun('deep')
+    } else if (quickSavePending.current && !checking && quickDone) {
+      quickSavePending.current = false
+      saveRun('quick')
     }
   }, [checking, deepRunning, quickDone, deepDone, saveRun])
 
   /**
    * @returns {{status: 'empty'} | {status: 'error'} | {status: 'ok', saved: import('./savedRunsService.js').SavedRunSnapshot}}
    */
-  const loadLastRun = useCallback(() => {
+  const loadRun = useCallback((id = null) => {
     try {
-      const saved = loadSnapshot()
+      const saved = loadSnapshot(id)
       if (!saved) return { status: 'empty' }
       setLoadedAt(saved.savedAt)
       return { status: 'ok', saved }
     } catch {
       clearSnapshot()
-      setSavedMeta(null)
+      setHistory([])
       return { status: 'error' }
     }
   }, [])
 
-  const clearLoadedAt = useCallback(() => setLoadedAt(null), [])
+  const loadLastRun = useCallback(() => loadRun(), [loadRun])
 
-  return { savedMeta, loadedAt, loadLastRun, clearLoadedAt }
+  const clearLoadedAt = useCallback(() => {
+    quickSavePending.current = false
+    deepSavePending.current = false
+    setLoadedAt(null)
+  }, [])
+
+  return { history, savedMeta, loadedAt, loadRun, loadLastRun, clearLoadedAt }
 }

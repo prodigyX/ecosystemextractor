@@ -1,3 +1,5 @@
+import { apiErrorMessage } from '../../shared/lib/apiResponse.js'
+
 /**
  * POSTs the project list to /api/deep-check and streams back newline-
  * delimited JSON progress events, invoking `onEvent` for each parsed event
@@ -13,18 +15,20 @@ export async function runDeepCheckStream(projects, onEvent) {
     body: JSON.stringify({ projects }),
   })
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err.error || `HTTP ${res.status}`)
+    throw new Error(await apiErrorMessage(res))
   }
 
   const reader = res.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
+  let streamError = null
 
   const parseLine = (line) => {
     if (!line.trim()) return
     try {
-      onEvent(JSON.parse(line))
+      const event = JSON.parse(line)
+      if (event.type === 'error') streamError = event.error || 'Deep check stream failed'
+      else onEvent(event)
     } catch {
       /* ignore malformed line */
     }
@@ -41,4 +45,5 @@ export async function runDeepCheckStream(projects, onEvent) {
   // The server always terminates each event with '\n', so `buffer` is normally
   // empty here. Flush it defensively in case the stream ends without one.
   parseLine(buffer)
+  if (streamError) throw new Error(streamError)
 }

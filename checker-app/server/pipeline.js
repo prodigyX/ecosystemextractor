@@ -11,6 +11,21 @@ import { checkX } from './signals/x.js'
 import { domainOf } from './util.js'
 
 const PROJECT_CONCURRENCY = 4
+const MAX_HISTORY_ENTRIES = 50
+
+/**
+ * Appends this run's score to the project's persisted history (keyed by
+ * domain, falling back to name) and returns the updated history array.
+ * Real data only: one entry per actual Deep Check run, not synthetic points.
+ */
+function recordScoreHistory(store, storeKey, score, verdict) {
+  if (!store) return []
+  const key = `history:${storeKey}`
+  const prev = store.get(key) ?? []
+  const next = [...prev, { ts: new Date().toISOString(), score, verdict }].slice(-MAX_HISTORY_ENTRIES)
+  store.set(key, next)
+  return next
+}
 
 export function scoreVerdict(evidence) {
   const score = Math.max(
@@ -94,6 +109,8 @@ async function checkProject(project, shared, emit) {
   const order = { bad: 0, warn: 1, good: 2, info: 3 }
   allEvidence.sort((a, b) => order[a.level] - order[b.level])
 
+  const history = recordScoreHistory(shared.store, ctx.storeKey, score, verdict)
+
   emit({
     type: 'project-done',
     projectId: project.id,
@@ -101,6 +118,7 @@ async function checkProject(project, shared, emit) {
     verdict,
     facts: allFacts,
     evidence: allEvidence,
+    history,
   })
 }
 

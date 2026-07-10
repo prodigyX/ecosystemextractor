@@ -86,5 +86,7 @@ export function useSavedRun({ projects, deep, fileName, checking, deepRunning, q
     }
   }, [])
 
-  return { savedMeta, loadedAt, loadLastRun }
+  const clearLoadedAt = useCallback(() => setLoadedAt(null), [])
+
+  return { savedMeta, loadedAt, loadLastRun, clearLoadedAt }
 }

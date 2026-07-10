@@ -2,7 +2,9 @@ import { VERDICTS, overallStatus } from '../shared/domain/scoring.js'
 
 const HEADERS = [
   'Name', 'Website', 'Final URL', 'HTTP Status', 'Website Status',
-  'X (Twitter)', 'X Handle', 'X Status', 'X Exists', 'X Last Post', 'X Followers',
+  'X (Twitter)', 'X Handle', 'X Status', 'X Exists',
+  'X Last Post', 'X Last Post Status', 'X Post Source', 'X Post Detail',
+  'X Followers', 'X Profile Source',
   'Overall (Quick)', 'Score', 'Verdict',
   'SSL Expires', 'Domain Expires', 'Registrar',
   'Copyright Year', 'Content Changed', 'Site Last Published',
@@ -59,7 +61,11 @@ function projectRow(p, deep) {
     p.xStatus,
     yn(f.xExists),
     day(f.xLatestPost),
+    f.xPostStatus ?? '',
+    f.xPostSource ?? '',
+    esc(f.xPostDetail ?? ''),
     f.xFollowers ?? '',
+    f.xProfileSource ?? '',
     OVERALL_LABELS[overallStatus(p.websiteStatus, p.xStatus)] ?? '',
     d?.score ?? '',
     d?.verdict ? (VERDICTS[d.verdict]?.[1] ?? d.verdict) : '',

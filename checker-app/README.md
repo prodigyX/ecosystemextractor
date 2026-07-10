@@ -1,4 +1,16 @@
-# React + Vite
+# Ecosystem Checker
+
+## Optional API credentials
+
+Deep Check works without API credentials, but public X timeline pages can rate-limit larger batches. To use the official X user-timeline endpoint for last-post dates, add an API bearer token to `checker-app/.env`:
+
+```dotenv
+X_BEARER_TOKEN=your_token_here
+```
+
+You can also add `GITHUB_TOKEN` to raise the GitHub public API limit used by the repository activity check.
+
+## React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

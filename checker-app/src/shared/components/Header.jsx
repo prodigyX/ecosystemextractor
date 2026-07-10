@@ -7,7 +7,6 @@ import { fmtSavedAt } from '../lib/formatters.js'
  *   loadedAt: string|null,
  *   checking: boolean,
  *   deepRunning: boolean,
- *   fetching: boolean,
  *   progress: {done: number, total: number},
  *   deepProgress: {done: number, total: number},
  *   savedMeta: import('../../features/saved-runs/savedRunsService.js').SavedRunMeta|null,
@@ -18,6 +17,8 @@ import { fmtSavedAt } from '../lib/formatters.js'
  *   onStartCheck: () => void,
  *   onStartDeepCheck: () => void,
  *   onDownloadCsv: () => void,
+ *   showCheckPrompt: boolean,
+ *   hasCheckResults: boolean,
  *   busy: boolean,
  * }} props
  */
@@ -27,7 +28,6 @@ export function Header({
   loadedAt,
   checking,
   deepRunning,
-  fetching,
   progress,
   deepProgress,
   savedMeta,
@@ -38,10 +38,18 @@ export function Header({
   onStartCheck,
   onStartDeepCheck,
   onDownloadCsv,
+  showCheckPrompt,
+  hasCheckResults,
   busy,
 }) {
   const pct = progress.total ? Math.round((progress.done / progress.total) * 100) : 0
   const deepPct = deepProgress.total ? Math.round((deepProgress.done / deepProgress.total) * 100) : 0
+  const hasProjects = projectsCount > 0
+
+  const runDataMenuAction = (event, action) => {
+    event.currentTarget.closest('details')?.removeAttribute('open')
+    action()
+  }
 
   return (
     <header className="header">
@@ -73,26 +81,6 @@ export function Header({
             </span>
           </div>
         )}
-        {savedMeta && (
-          <button
-            className="btn btn-secondary"
-            onClick={onLoadLastRun}
-            disabled={busy || (loadedAt && loadedAt >= savedMeta.savedAt)}
-            title={
-              loadedAt && loadedAt >= savedMeta.savedAt
-                ? 'Current results are already the latest'
-                : `Restore ${savedMeta.count} projects checked ${fmtSavedAt(savedMeta.savedAt)}`
-            }
-          >
-            Load Last Run ({fmtSavedAt(savedMeta.savedAt)})
-          </button>
-        )}
-        <button className="btn btn-fetch" onClick={onFetchFromBerachain} disabled={busy}>
-          {fetching ? 'Fetching…' : 'Fetch from Berachain'}
-        </button>
-        <button className="btn btn-upload" onClick={() => fileInputRef.current?.click()} disabled={busy}>
-          Upload JSON
-        </button>
         <input
           ref={fileInputRef}
           type="file"
@@ -100,15 +88,61 @@ export function Header({
           style={{ display: 'none' }}
           onChange={onFileInput}
         />
-        <button className="btn btn-secondary" onClick={onStartCheck} disabled={busy || projectsCount === 0}>
-          {checking ? 'Checking…' : 'Quick Check'}
-        </button>
-        <button className="btn btn-primary" onClick={onStartDeepCheck} disabled={busy || projectsCount === 0}>
-          {deepRunning ? 'Deep Checking…' : 'Deep Check'}
-        </button>
-        <button className="btn btn-secondary" onClick={onDownloadCsv} disabled={projectsCount === 0}>
-          Download CSV
-        </button>
+        {hasProjects && !showCheckPrompt && (
+          <div className="header-check-actions" aria-label="Check actions">
+            <button className="btn btn-secondary" onClick={onStartCheck} disabled={busy}>
+              <span aria-hidden="true">⚡</span> {checking ? 'Checking…' : 'Quick Check'}
+            </button>
+            <button className="btn btn-primary" onClick={onStartDeepCheck} disabled={busy}>
+              <span aria-hidden="true">◇</span> {deepRunning ? 'Deep Checking…' : 'Deep Check'}
+            </button>
+          </div>
+        )}
+        {hasProjects && hasCheckResults && (
+          <button className="btn btn-secondary" onClick={onDownloadCsv} disabled={busy}>
+            <span aria-hidden="true">↓</span> Export CSV
+          </button>
+        )}
+        {hasProjects && (
+          <details className={`header-data-menu ${busy ? 'header-data-menu-disabled' : ''}`}>
+            <summary
+              className="btn btn-secondary"
+              aria-label="Open data source actions"
+              aria-disabled={busy}
+              onClick={(event) => { if (busy) event.preventDefault() }}
+            >
+              Data <span aria-hidden="true">⌄</span>
+            </summary>
+            <div className="header-data-popover">
+              <button
+                type="button"
+                onClick={(event) => runDataMenuAction(event, onFetchFromBerachain)}
+                disabled={busy}
+              >
+                <span aria-hidden="true">◎</span>
+                <span><strong>Fetch latest</strong><small>From Berachain</small></span>
+              </button>
+              <button
+                type="button"
+                onClick={(event) => runDataMenuAction(event, () => fileInputRef.current?.click())}
+                disabled={busy}
+              >
+                <span aria-hidden="true">↑</span>
+                <span><strong>Upload JSON</strong><small>Replace current data</small></span>
+              </button>
+              {savedMeta && (
+                <button
+                  type="button"
+                  onClick={(event) => runDataMenuAction(event, onLoadLastRun)}
+                  disabled={busy || Boolean(loadedAt && loadedAt >= savedMeta.savedAt)}
+                >
+                  <span aria-hidden="true">↶</span>
+                  <span><strong>Restore last run</strong><small>{fmtSavedAt(savedMeta.savedAt)} · {savedMeta.count} projects</small></span>
+                </button>
+              )}
+            </div>
+          </details>
+        )}
       </div>
     </header>
   )

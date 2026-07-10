@@ -5,6 +5,30 @@ function fmtDate(iso) {
     : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
+function xPostPresentation(iso) {
+  const time = new Date(iso).getTime()
+  if (Number.isNaN(time)) return { status: 'Unknown', tone: 'info' }
+  const age = Math.floor((Date.now() - time) / 86400000)
+  if (age <= 30) return { status: 'Active', tone: 'good' }
+  if (age <= 90) return { status: 'Recent', tone: 'good' }
+  if (age <= 180) return { status: 'Quiet', tone: 'warn' }
+  return { status: 'Silent', tone: 'bad' }
+}
+
+function missingPostStatus(status) {
+  if (status === 'protected') return 'Protected'
+  if (status === 'no-public-posts') return 'No posts'
+  if (status === 'rate-limited') return 'Rate limited'
+  return 'Unavailable'
+}
+
+function followerPresentation(followers) {
+  if (followers >= 20000) return { status: 'Established', tone: 'good' }
+  if (followers >= 5000) return { status: 'Decent', tone: 'good' }
+  if (followers >= 1000) return { status: 'Small', tone: 'info' }
+  return { status: 'Tiny', tone: 'warn' }
+}
+
 /** Builds table rows only from facts that actually exist for this project — no placeholders. */
 function buildRows(facts = {}) {
   const rows = []
@@ -20,10 +44,30 @@ function buildRows(facts = {}) {
   if (facts.domainExpiry) {
     rows.push({ check: 'Domain', status: 'Registered', tone: 'good', value: `expires ${fmtDate(facts.domainExpiry)}` })
   }
+  if (facts.xFollowers != null) {
+    const presentation = followerPresentation(facts.xFollowers)
+    rows.push({
+      check: 'X Followers',
+      status: presentation.status,
+      tone: presentation.tone,
+      value: facts.xFollowers.toLocaleString(),
+    })
+  }
   if (facts.xLatestPost) {
-    rows.push({ check: 'X (Twitter) Posts', status: 'Active', tone: 'good', value: fmtDate(facts.xLatestPost) })
-  } else if (facts.xFollowers != null) {
-    rows.push({ check: 'X (Twitter)', status: 'Found', tone: 'info', value: `${facts.xFollowers.toLocaleString()} followers` })
+    const presentation = xPostPresentation(facts.xLatestPost)
+    rows.push({
+      check: 'X Last Post',
+      status: presentation.status,
+      tone: presentation.tone,
+      value: fmtDate(facts.xLatestPost),
+    })
+  } else if (facts.xExists === true) {
+    rows.push({
+      check: 'X Last Post',
+      status: missingPostStatus(facts.xPostStatus),
+      tone: 'info',
+      value: facts.xPostDetail || 'No public post timestamp returned',
+    })
   }
   if (facts.lastPush) {
     rows.push({

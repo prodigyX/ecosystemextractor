@@ -61,6 +61,8 @@ async function checkProject(project, shared, emit) {
     storeKey: domainOf(project.website) || project.name,
     getBrowser: shared.getBrowser,
     xState: shared.xState,
+    xTimelineQueue: shared.xTimelineQueue,
+    xBrowserQueue: shared.xBrowserQueue,
     html: null,
     finalUrl: null,
     links: {},
@@ -87,7 +89,7 @@ async function checkProject(project, shared, emit) {
     safeRun('dns-ssl', () => checkDnsSsl(project)).then(collect),
     safeRun('domain', () => checkDomain(project)).then(collect),
     safeRun('defillama', () => checkDefillama(project)).then(collect),
-    shared.xQueue(() => safeRun('x', () => checkX(project, ctx)).then(collect)),
+    safeRun('x', () => checkX(project, ctx)).then(collect),
   ]
 
   // Stage B: needs the HTML / discovered links
@@ -157,9 +159,17 @@ export async function runPipeline(projects, { env, store, launchBrowser }, emit)
     return browserPromise
   }
 
-  // X checks run one at a time — the syndication endpoint 429s under parallel bursts.
-  // xState tracks throttle failures so syndication is skipped once it's clearly rate-limited.
-  const shared = { env, store, getBrowser, xQueue: makeQueue(1), xState: { throttleFailures: 0 } }
+  // Profile lookups can run with the normal project concurrency. Only timeline
+  // syndication is serialized/paced; logged-out browser fallbacks are also
+  // bounded so a throttled batch does not open many X tabs at once.
+  const shared = {
+    env,
+    store,
+    getBrowser,
+    xTimelineQueue: makeQueue(1),
+    xBrowserQueue: makeQueue(2),
+    xState: { syndicationBlocked: false },
+  }
   const projectQueue = makeQueue(PROJECT_CONCURRENCY)
 
   emit({ type: 'start', total: projects.length })

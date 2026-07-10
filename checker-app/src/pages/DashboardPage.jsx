@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import { Header } from '../shared/components/Header.jsx'
 import { Dropzone } from '../shared/components/Dropzone.jsx'
+import { CheckModePrompt } from '../shared/components/CheckModePrompt.jsx'
 import { computeVerdictCounts, computeQuickCounts } from '../shared/domain/scoring.js'
 import { useProjects } from '../features/project-source/useProjects.js'
 import { useQuickCheck } from '../features/quick-check/useQuickCheck.js'
@@ -66,6 +67,7 @@ export function DashboardPage() {
     setStatusFilter('all')
     setVerdictFilter(new Set())
     setSelectedProjectId(null)
+    savedRun.clearLoadedAt()
   }
 
   const toggleExpand = useCallback((id) => {
@@ -86,10 +88,16 @@ export function DashboardPage() {
     })
   }, [])
 
-  const onFileInput = (e) => projectsState.handleFile(e.target.files[0], resetForNewLoad)
+  const onFileInput = (e) => {
+    const file = e.target.files[0]
+    projectsState.handleFile(file, resetForNewLoad)
+    // Allow selecting the same file again after it has changed on disk.
+    e.target.value = ''
+  }
 
   const onDrop = (e) => {
     e.preventDefault()
+    if (busy) return
     projectsState.handleFile(e.dataTransfer.files[0], resetForNewLoad)
   }
 
@@ -128,6 +136,9 @@ export function DashboardPage() {
 
   const verdictCounts = deepDone ? computeVerdictCounts(projectsState.projects, deepCheck.deep) : null
   const quickCounts = !verdictCounts && quickDone ? computeQuickCounts(projectsState.projects) : null
+  const showCheckPrompt = projectsState.projects.length > 0 &&
+    !quick.checking && !deepCheck.deepRunning && !quickDone && !deepDone
+  const hasCheckResults = quickDone || deepDone
 
   const statusCounts = computeStatusCounts(projectsState.projects, deepCheck.deep)
   const issuesCount = projectsState.projects.filter((p) =>
@@ -151,7 +162,6 @@ export function DashboardPage() {
         loadedAt={savedRun.loadedAt}
         checking={quick.checking}
         deepRunning={deepCheck.deepRunning}
-        fetching={projectsState.fetching}
         progress={quick.progress}
         deepProgress={deepCheck.deepProgress}
         savedMeta={savedRun.savedMeta}
@@ -162,22 +172,31 @@ export function DashboardPage() {
         onStartCheck={handleStartCheck}
         onStartDeepCheck={handleStartDeepCheck}
         onDownloadCsv={() => downloadCsv(projectsState.projects, deepCheck.deep)}
+        showCheckPrompt={showCheckPrompt}
+        hasCheckResults={hasCheckResults}
         busy={busy}
       />
 
       {projectsState.projects.length === 0 ? (
         <Dropzone
           fetching={projectsState.fetching}
-          savedMeta={savedRun.savedMeta}
           parseError={projectsState.parseError}
           onDrop={onDrop}
           onBrowseClick={() => fileInputRef.current?.click()}
           onFetchFromBerachain={handleFetchFromBerachain}
-          onLoadLastRun={handleLoadLastRun}
         />
       ) : (
         <>
           {projectsState.parseError && <p className="parse-error">{projectsState.parseError}</p>}
+
+          {showCheckPrompt && (
+            <CheckModePrompt
+              projectsCount={projectsState.projects.length}
+              onQuickCheck={handleStartCheck}
+              onDeepCheck={handleStartDeepCheck}
+              disabled={busy}
+            />
+          )}
 
           {verdictCounts && <SummaryCards variant="deep" counts={verdictCounts} />}
           {quickCounts && <SummaryCards variant="quick" counts={quickCounts} />}

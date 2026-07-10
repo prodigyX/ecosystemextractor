@@ -46,13 +46,16 @@ export function Header({
   return (
     <header className="header">
       <div className="header-left">
-        <h1>Ecosystem Checker</h1>
-        {fileName && (
-          <span className="subtitle">
-            {fileName} · {projectsCount} projects
-            {loadedAt && ` · results from ${fmtSavedAt(loadedAt)}`}
-          </span>
-        )}
+        <img src="/favicon.svg" alt="" className="header-logo" />
+        <div>
+          <h1>Ecosystem Checker</h1>
+          {fileName && (
+            <span className="subtitle">
+              {fileName} · {projectsCount} projects
+              {loadedAt && ` · results from ${fmtSavedAt(loadedAt)}`}
+            </span>
+          )}
+        </div>
       </div>
       <div className="header-right">
         {(checking || deepRunning) && (

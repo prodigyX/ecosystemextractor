@@ -19,13 +19,107 @@ function launchBrowser() {
   })
 }
 
-function readBody(req) {
+const MAX_BODY_BYTES = 1024 * 1024 // 1 MB — the project list is small; anything bigger is abuse
+const MAX_PROJECTS_PER_RUN = 500
+
+function readBody(req, limit = MAX_BODY_BYTES) {
   return new Promise((resolve, reject) => {
     let data = ''
-    req.on('data', (c) => (data += c))
+    req.on('data', (c) => {
+      data += c
+      if (data.length > limit) {
+        req.destroy()
+        reject(new Error('Request body too large'))
+      }
+    })
     req.on('end', () => resolve(data))
     req.on('error', reject)
   })
+}
+
+// Hostnames the check pipeline must never be pointed at — the deep check
+// fetches attacker-suppliable URLs server-side, so block loopback/private
+// ranges to keep it from probing the local machine or LAN (SSRF guard).
+const BLOCKED_HOST_PATTERNS = [
+  /^localhost$/i,
+  /^127\./,
+  /^0\.0\.0\.0$/,
+  /^\[?::1\]?$/,
+  /^169\.254\./,
+  /^10\./,
+  /^192\.168\./,
+  /^172\.(1[6-9]|2\d|3[01])\./,
+  /\.local$/i,
+  /\.internal$/i,
+]
+
+function sanitizeCheckUrl(value) {
+  if (typeof value !== 'string' || !value) return null
+  try {
+    const url = new URL(value)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
+    if (BLOCKED_HOST_PATTERNS.some((re) => re.test(url.hostname))) return null
+    return url.href
+  } catch {
+    return null
+  }
+}
+
+function sanitizeProjects(raw) {
+  if (!Array.isArray(raw)) throw new Error('projects must be an array')
+  if (raw.length === 0) throw new Error('No projects provided')
+  if (raw.length > MAX_PROJECTS_PER_RUN) throw new Error(`Too many projects (max ${MAX_PROJECTS_PER_RUN})`)
+  return raw.map((p) => ({
+    id: String(p?.id ?? ''),
+    name: String(p?.name ?? '').slice(0, 200),
+    website: sanitizeCheckUrl(p?.website),
+    x: sanitizeCheckUrl(p?.x),
+  }))
+}
+
+function securityHeadersPlugin() {
+  return {
+    name: 'security-headers',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        res.setHeader('X-Content-Type-Options', 'nosniff')
+        res.setHeader('X-Frame-Options', 'DENY')
+        res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+        res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()')
+        res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+        // script/style 'unsafe-inline' is required by Vite's dev HMR preamble and
+        // React inline style attributes; img/connect stay broad because the app's
+        // whole job is loading third-party project icons and probing external sites.
+        res.setHeader(
+          'Content-Security-Policy',
+          [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline'",
+            "style-src 'self' 'unsafe-inline'",
+            "img-src 'self' https: data:",
+            "connect-src 'self' https: http: ws: wss:",
+            "font-src 'self' data:",
+            "object-src 'none'",
+            "base-uri 'self'",
+            "form-action 'self'",
+            "frame-ancestors 'none'",
+          ].join('; ')
+        )
+
+        // CSRF guard for the API: a cross-site page can't be allowed to trigger
+        // server-side checks (or Puppeteer runs) through the user's browser.
+        if (req.url?.startsWith('/api/')) {
+          const origin = req.headers.origin
+          if (origin && new URL(origin).host !== req.headers.host) {
+            res.statusCode = 403
+            res.end('Cross-origin requests are not allowed')
+            return
+          }
+        }
+        next()
+      })
+    },
+  }
 }
 
 function berachainExtractPlugin() {
@@ -34,6 +128,11 @@ function berachainExtractPlugin() {
     configureServer(server) {
       // ── Live extraction from explore.berachain.com ──
       server.middlewares.use('/api/extract', async (req, res) => {
+        if (req.method !== 'GET') {
+          res.statusCode = 405
+          res.end('GET only')
+          return
+        }
         let browser
         try {
           browser = await launchBrowser()
@@ -71,7 +170,9 @@ function berachainExtractPlugin() {
                 }
                 if (masterArray) break
               }
-            } catch (_) {}
+            } catch {
+              /* fiber scan failed — fall through to the __next_f strategy */
+            }
 
             if (masterArray) return masterArray
 
@@ -90,7 +191,9 @@ function berachainExtractPlugin() {
                     else if (combined[i] === '}') { depth--; if (depth === 0) break }
                   }
                   matches.push(JSON.parse(combined.slice(m.index, i + 1)))
-                } catch (_) {}
+                } catch {
+                  /* malformed fragment — skip this match */
+                }
               }
               if (matches.length > 0) return matches
             }
@@ -123,8 +226,7 @@ function berachainExtractPlugin() {
         }
         try {
           const body = JSON.parse(await readBody(req))
-          const projects = body.projects || []
-          if (!projects.length) throw new Error('No projects provided')
+          const projects = sanitizeProjects(body.projects)
 
           res.setHeader('Content-Type', 'application/x-ndjson')
           res.setHeader('Cache-Control', 'no-cache')
@@ -152,7 +254,7 @@ function berachainExtractPlugin() {
 }
 
 export default defineConfig({
-  plugins: [react(), berachainExtractPlugin()],
+  plugins: [securityHeadersPlugin(), react(), berachainExtractPlugin()],
   server: {
     proxy: {
       '/x-proxy': {

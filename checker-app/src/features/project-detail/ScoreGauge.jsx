@@ -1,18 +1,9 @@
-import { QUALITY_LABELS } from '../../shared/domain/scoring.js'
+import { QUALITY_LABELS, TIER_COLORS } from '../../shared/domain/scoring.js'
 
 const SIZE = 160
 const STROKE = 14
 const RADIUS = (SIZE - STROKE) / 2
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
-
-const GAUGE_COLOR = {
-  active: '#00b894',
-  'likely-active': '#00cec9',
-  unclear: '#fedb71',
-  'likely-dead': '#ec8a19',
-  dead: '#f3527f',
-  error: '#f3527f',
-}
 
 /**
  * Circular progress gauge for the overall score, colored by verdict.
@@ -21,7 +12,7 @@ const GAUGE_COLOR = {
 export function ScoreGauge({ score, verdict }) {
   const clamped = Math.max(0, Math.min(100, score))
   const offset = CIRCUMFERENCE * (1 - clamped / 100)
-  const color = GAUGE_COLOR[verdict] ?? '#a39289'
+  const color = TIER_COLORS[verdict] ?? '#a39289'
   const [, quality] = QUALITY_LABELS[verdict] ?? [null, '—']
 
   return (

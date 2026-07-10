@@ -14,6 +14,7 @@ export function CategoryTiles({ evidence }) {
           <span className="category-tile-icon" aria-hidden="true">{c.icon}</span>
           <span className="category-tile-label">{c.label}</span>
           <span className="category-tile-score">{c.score}<span className="category-tile-max">/100</span></span>
+          <span className={`category-tile-status status-${c.verdict}`}>{c.statusWord}</span>
         </div>
       ))}
     </div>

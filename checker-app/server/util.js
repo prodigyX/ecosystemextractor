@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import process from 'node:process'
 
 export const UA =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'

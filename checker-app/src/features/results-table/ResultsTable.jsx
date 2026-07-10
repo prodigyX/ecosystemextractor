@@ -104,7 +104,11 @@ export function ResultsTable({ projects, deep, expanded, onToggleExpand, selecte
                     aria-label={`View dashboard summary for ${p.name}`}
                     title="View dashboard summary"
                   >
-                    ▦
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <rect x="1.5" y="8.5" width="3" height="6" rx="1" fill="currentColor" />
+                      <rect x="6.5" y="4.5" width="3" height="10" rx="1" fill="currentColor" />
+                      <rect x="11.5" y="1.5" width="3" height="13" rx="1" fill="currentColor" />
+                    </svg>
                   </button>
                 </td>
                 <td className="col-expand">

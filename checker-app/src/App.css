@@ -67,6 +67,18 @@ body {
   margin-bottom: 24px;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-logo {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+}
+
 .header-left h1 {
   font-size: 1.5rem;
   font-weight: 700;
@@ -714,18 +726,21 @@ tbody tr:hover {
 }
 
 .btn-icon {
-  background: none;
-  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--border-2);
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 0.95rem;
-  padding: 2px 8px;
-  border-radius: 4px;
+  padding: 5px 7px;
+  border-radius: 6px;
+  transition: color 0.15s, border-color 0.15s;
 }
 
 .btn-icon:hover {
-  background: var(--surface-hover);
   color: var(--accent);
+  border-color: var(--accent);
 }
 
 tbody tr.row-selected {
@@ -932,17 +947,7 @@ tbody tr.row-selected {
   padding: 20px;
 }
 
-/* ── Project detail modal: banner + header ── */
-.detail-banner {
-  display: block;
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-  border-radius: 10px;
-  margin-bottom: 18px;
-  background: var(--surface-2);
-}
-
+/* ── Project detail modal: header ── */
 .detail-header {
   display: flex;
   align-items: flex-start;
@@ -1071,13 +1076,131 @@ tbody tr.row-selected {
   text-align: center;
 }
 
-/* ── Score gauge + history ── */
+/* ── Score card + vitality trend ── */
 .detail-score-row {
+  display: grid;
+  grid-template-columns: minmax(380px, 1.2fr) minmax(280px, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 860px) {
+  .detail-score-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  min-width: 0;
+}
+
+.detail-card-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-strong);
+  margin-bottom: 10px;
+}
+
+.detail-score-card {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.detail-score-gauge-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  max-width: 200px;
+}
+
+.detail-verdict-word {
+  font-size: 1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: -14px;
+}
+
+.detail-verdict-blurb {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-align: center;
+  margin: 6px 0 8px;
+  line-height: 1.4;
+}
+
+.detail-confidence {
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: help;
+}
+
+.confidence-high { color: #00b894; }
+.confidence-medium { color: #fedb71; }
+.confidence-low { color: #ec8a19; }
+
+/* ── Score breakdown bars ── */
+.score-breakdown {
+  flex: 1;
+  min-width: 0;
+}
+
+.score-breakdown-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-strong);
+  margin-bottom: 10px;
+}
+
+.score-breakdown-row {
   display: flex;
   align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 0.72rem;
+}
+
+.score-breakdown-label {
+  width: 110px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.score-breakdown-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--progress-bg);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.score-breakdown-fill {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+}
+
+.score-breakdown-value {
+  width: 48px;
+  flex-shrink: 0;
+  text-align: right;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-trend-meta {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-top: 6px;
 }
 
 .score-gauge {
@@ -1124,18 +1247,6 @@ tbody tr.row-selected {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-}
-
-.detail-history {
-  flex: 1 1 320px;
-  min-width: 260px;
-}
-
-.detail-history-title {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-bottom: 8px;
 }
 
 .detail-history-empty {
@@ -1204,11 +1315,29 @@ tbody tr.row-selected {
   color: var(--text-dim);
 }
 
+.category-tile-status {
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.category-tile-status.status-active        { color: #00b894; }
+.category-tile-status.status-likely-active { color: #00cec9; }
+.category-tile-status.status-unclear       { color: #fedb71; }
+.category-tile-status.status-likely-dead   { color: #ec8a19; }
+.category-tile-status.status-dead          { color: #f3527f; }
+
 /* ── Detail bottom panels ── */
 .detail-panels {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: 1.25fr 1fr 0.9fr;
   gap: 16px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 1000px) {
+  .detail-panels {
+    grid-template-columns: 1fr;
+  }
 }
 
 .detail-panel {
@@ -1228,7 +1357,7 @@ tbody tr.row-selected {
 
 /* ── About section (source-extract write-up) ── */
 .detail-about {
-  margin-bottom: 20px;
+  margin: 0 0 20px;
 }
 
 .simple-markdown {
@@ -1286,44 +1415,58 @@ tbody tr.row-selected {
   object-fit: cover;
 }
 
-/* ── Activity overview table ── */
-.activity-overview {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* ── Activity overview table ──
+   Overrides the app's global table rules (sticky th, row hover/stripe
+   backgrounds) which would otherwise leak into this nested table. */
+.activity-table {
+  font-size: 0.75rem;
 }
 
-.activity-overview-row {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  font-size: 0.78rem;
+.activity-table th {
+  position: static;
+  background: none;
+  border-bottom: 1px solid var(--border);
+  padding: 4px 8px 8px 0;
+  font-size: 0.66rem;
 }
 
-.activity-overview-check {
+.activity-table td {
+  padding: 6px 8px 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.activity-table tbody tr,
+.activity-table tbody tr:hover {
+  background: none;
+}
+
+.activity-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.activity-table-check {
   color: var(--text-muted);
-  flex: 1;
-  min-width: 0;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  max-width: 150px;
 }
 
-.activity-overview-status {
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.activity-overview-value {
+.activity-table-value {
   color: var(--text-dim);
   font-size: 0.72rem;
   white-space: nowrap;
 }
 
-.tone-good { color: #00b894; }
-.tone-warn { color: #fedb71; }
-.tone-bad  { color: #f3527f; }
-.tone-info { color: var(--text-dim); }
+.activity-badge {
+  font-size: 0.66rem;
+  padding: 2px 8px;
+}
+
+.tone-badge-good { background: rgba(0,184,148,0.18); color: #00b894; }
+.tone-badge-warn { background: rgba(254,219,113,0.18); color: #fedb71; }
+.tone-badge-bad  { background: rgba(233,42,103,0.18); color: #f3527f; }
+.tone-badge-info { background: var(--surface); color: var(--text-dim); }
 
 /* ── Recent signals tabs ── */
 .signals-tabs {

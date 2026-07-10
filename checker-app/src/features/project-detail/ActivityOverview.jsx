@@ -65,14 +65,23 @@ export function ActivityOverview({ facts }) {
     return <p className="empty">No check data available yet.</p>
   }
   return (
-    <div className="activity-overview">
-      {rows.map((r) => (
-        <div key={r.check} className="activity-overview-row">
-          <span className="activity-overview-check">{r.check}</span>
-          <span className={`activity-overview-status tone-${r.tone}`}>{r.status}</span>
-          {r.value && <span className="activity-overview-value">{r.value}</span>}
-        </div>
-      ))}
-    </div>
+    <table className="activity-table">
+      <thead>
+        <tr>
+          <th>Check</th>
+          <th>Status</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr key={r.check}>
+            <td className="activity-table-check">{r.check}</td>
+            <td><span className={`badge activity-badge tone-badge-${r.tone}`}>{r.status}</span></td>
+            <td className="activity-table-value">{r.value ?? '—'}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   )
 }

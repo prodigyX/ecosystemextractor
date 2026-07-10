@@ -1,4 +1,4 @@
-import { fetchTimeout, UA, ev, domainOf } from '../util.js'
+import { fetchTimeout, ev, domainOf } from '../util.js'
 
 const MAX_REDIRECTS = 6
 const MAX_HTML = 800 * 1024

@@ -74,23 +74,38 @@ export async function recordXRateLimit(headers) {
   await recordRateLimit('x', headers, 'x-rate-limit-limit', 'x-rate-limit-remaining', 'x-rate-limit-reset')
 }
 
+/**
+ * @param {Headers} headers response headers from a live api.x.com (official
+ * API, X_BEARER_TOKEN) call — tracked separately from syndication's 'x'
+ * source since it's a completely different quota pool (this app's own
+ * reserved API quota vs. an unauthenticated endpoint's shared public one).
+ */
+export async function recordXOfficialRateLimit(headers) {
+  await recordRateLimit('x-official', headers, 'x-rate-limit-limit', 'x-rate-limit-remaining', 'x-rate-limit-reset')
+}
+
 /** @param {Headers} headers response headers from a live api.github.com call */
 export async function recordGithubRateLimit(headers) {
   await recordRateLimit('github', headers, 'x-ratelimit-limit', 'x-ratelimit-remaining', 'x-ratelimit-reset')
 }
 
+const SOURCES = ['x', 'xOfficial', 'github']
+const SOURCE_KEYS = { x: 'x', xOfficial: 'x-official', github: 'github' }
+
 /** Returns the last-seen snapshot for each source, or null per source if none observed yet / no database configured. */
 export async function getRateLimitSnapshot() {
-  const empty = { x: null, github: null }
+  const empty = Object.fromEntries(SOURCES.map((s) => [s, null]))
   const sql = getSql()
   if (!sql) return empty
   try {
     await ensureSchema(sql)
     const rows = await sql`SELECT * FROM rate_limit_status`
+    const byKey = new Map(rows.map((row) => [row.source, row]))
     const result = { ...empty }
-    for (const row of rows) {
-      if (row.source !== 'x' && row.source !== 'github') continue
-      result[row.source] = {
+    for (const source of SOURCES) {
+      const row = byKey.get(SOURCE_KEYS[source])
+      if (!row) continue
+      result[source] = {
         limit: row.limit_value,
         remaining: row.remaining,
         resetAt: row.reset_at ? new Date(row.reset_at).getTime() : null,

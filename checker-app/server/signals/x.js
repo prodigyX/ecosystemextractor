@@ -1,4 +1,4 @@
-import { fetchTimeout, ev, daysAgo, fmtDate } from '../util.js'
+import { fetchTimeout, ev, daysAgo, fmtDate, fmtDateTime } from '../util.js'
 import {
   X_RESULT_CACHE_ENABLED,
   X_LAST_POST_AGE_DAYS,
@@ -6,8 +6,11 @@ import {
   X_SYNDICATION_INTERVAL_MS,
   SIGNAL_FRESH_FETCH_MS,
   SIGNAL_FRESH_FETCH_DAYS,
+  X_FALLBACK_REFETCH_MS,
+  X_FALLBACK_REFETCH_DAYS,
 } from '../config.js'
-import { recordXRateLimit } from '../rateLimitStatus.js'
+import { recordXRateLimit, recordXOfficialRateLimit } from '../rateLimitStatus.js'
+import { getXFallback, saveXFallback } from '../xFallback.js'
 
 export function xHandleFromUrl(url) {
   const m = url.match(/(?:x\.com|twitter\.com)\/@?([\w]+)/i)
@@ -67,6 +70,10 @@ async function viaOfficialX(userId, token) {
     { headers: { Authorization: `Bearer ${token}` } },
     12000
   )
+  // Capture the live quota headers regardless of outcome — this is a genuine
+  // live call against this app's own reserved API quota, tracked separately
+  // from syndication's shared public quota (see server/rateLimitStatus.js).
+  await recordXOfficialRateLimit(res.headers)
   if (res.status === 401 || res.status === 403) {
     return { result: null, attempt: attempt('official-api', 'auth-error', `HTTP ${res.status}`) }
   }
@@ -211,10 +218,11 @@ export function followerEvidence(handle, result) {
   return metricEvidence('x-followers', 'warn', 'X weak audience (≤2K followers)', detail, -4)
 }
 
-/** Short "(live)" / "(cached)" / "(stale cache)" tag so a shown date's trustworthiness is visible at a glance, not just inferred. */
+/** Short "(live)" / "(cached)" / "(stale cache)" / "(fallback)" tag so a shown date's trustworthiness is visible at a glance, not just inferred. */
 function freshnessTag(postSource) {
   if (postSource === 'cache') return ' (cached)'
   if (postSource === 'stale-cache') return ' (stale cache)'
+  if (postSource === 'x-fallback') return ' (fallback)'
   if (postSource === 'official-api' || postSource === 'syndication') return ' (live)'
   return ''
 }
@@ -337,6 +345,14 @@ export async function checkX(project, ctx) {
   const freshCache = X_RESULT_CACHE_ENABLED && Boolean(cached?.result) &&
     cacheAgeMs < SIGNAL_FRESH_FETCH_MS && cachedPostIsTrustworthy
 
+  // Durable fallback (server/xFallback.js): consulted only once the regular
+  // cache above is stale or was cleared. If it's still within its own
+  // (longer, clear-immune) window, reuse it instead of hitting X again —
+  // this is the hard floor that survives "Clear check cache".
+  const fallback = freshCache ? null : await getXFallback(handle)
+  const fallbackAgeMs = fallback?.fetchedAt ? Date.now() - new Date(fallback.fetchedAt).getTime() : Infinity
+  const fallbackIsFresh = Boolean(fallback?.result) && fallbackAgeMs < X_FALLBACK_REFETCH_MS
+
   let profile = freshCache ? profileSnapshot(cached.result) : null
   let postResult = freshCache ? cached.result : null
   let profileSource = freshCache ? 'cache' : null
@@ -345,6 +361,16 @@ export async function checkX(project, ctx) {
 
   if (freshCache) {
     postAttempts.push(attempt('cache', cached.result.latestPost ? 'success' : 'cached'))
+  } else if (fallbackIsFresh) {
+    profile = profileSnapshot(fallback.result)
+    postResult = fallback.result
+    profileSource = 'x-fallback'
+    postSource = 'x-fallback'
+    postAttempts.push(attempt(
+      'x-fallback',
+      fallback.result.latestPost ? 'success' : 'cached',
+      `Reusing the durable fallback record from ${fmtDate(fallback.fetchedAt)} (within the ${X_FALLBACK_REFETCH_DAYS}-day floor).`
+    ))
   } else {
     // The official API needs a user ID, so its configured path starts with the
     // lightweight profile lookup. The default unauthenticated path skips that
@@ -376,7 +402,16 @@ export async function checkX(project, ctx) {
       }
     }
 
-    if (!postResult && profile?.exists !== false && !profile?.protected) {
+    // Once an official API token is configured, syndication is never used at
+    // all: it's an unauthenticated public endpoint sharing one rate-limit
+    // pool with every other caller on the same IP (the exact fragility this
+    // whole cache/fallback design exists to work around), while the official
+    // API is reliable and reserved to this app's own quota. If a live
+    // official-api attempt above didn't produce a result, the stale-cache
+    // fallback further below reuses whatever this handle's last successful
+    // official-api fetch found — even past the normal freshness window —
+    // rather than ever risking syndication as a substitute.
+    if (!postResult && !ctx.env?.X_BEARER_TOKEN && profile?.exists !== false && !profile?.protected) {
       try {
         const syndication = await runQueued(
           ctx.xTimelineQueue,
@@ -428,7 +463,7 @@ export async function checkX(project, ctx) {
     result = { ...profile, ...postResult }
   } else if (postResult?.latestPost) {
     result = { ...profile, ...postResult }
-  } else if (!freshCache && cached?.result && profile?.exists !== false) {
+  } else if (!freshCache && !fallbackIsFresh && cached?.result && profile?.exists !== false) {
     result = { ...cached.result, ...profile, ...postResult, latestPost: cached.result.latestPost }
     postSource = 'stale-cache'
     postAttempts.push(attempt('stale-cache', 'success', 'live X sources were unavailable; showing the last known result'))
@@ -453,10 +488,22 @@ export async function checkX(project, ctx) {
 
   // Only a genuinely live, definitive determination counts as a "successful
   // fetch" that resets the SIGNAL_FRESH_FETCH_DAYS cooldown for this handle —
-  // a stale-cache fallback (live sources were unavailable) does not, so the
-  // very next run retries live sources instead of waiting out the window.
-  if (ctx.store && result.exists != null && !freshCache && postSource !== 'stale-cache') {
+  // a stale-cache fallback (live sources were unavailable) does not, and
+  // reusing the durable x-fallback record doesn't either (it's not a new
+  // fetch, just a replay of a possibly-days-old result) — so the very next
+  // run still retries live sources instead of waiting out either window.
+  const isLiveResult = postSource !== 'stale-cache' && postSource !== 'x-fallback'
+  if (ctx.store && result.exists != null && !freshCache && isLiveResult) {
     await ctx.store.set(cacheKey, { result, postSource, checkedAt: new Date().toISOString() })
+  }
+
+  // The durable fallback (server/xFallback.js) only ever moves forward on a
+  // genuine live official-api/syndication success — never overwritten with
+  // a stale-cache replay or a reuse of itself — so it stays a trustworthy
+  // "last known good" floor even after "Clear check cache" wipes the
+  // regular cache above.
+  if (result.exists != null && (postSource === 'official-api' || postSource === 'syndication')) {
+    await saveXFallback(handle, result)
   }
 
   if (!result.exists) {
@@ -474,16 +521,20 @@ export async function checkX(project, ctx) {
   }
 
   if (result.latestPost) {
-    facts.xPostStatus = ['cache', 'stale-cache'].includes(postSource) ? 'cached' : 'available'
+    facts.xPostStatus = ['cache', 'stale-cache', 'x-fallback'].includes(postSource) ? 'cached' : 'available'
     if (postSource === 'cache') {
       facts.xPostDetail = `Using the existing last-post record (fetched within the last ${SIGNAL_FRESH_FETCH_DAYS} days); X network requests were skipped.`
     } else if (postSource === 'stale-cache') {
       facts.xPostDetail = 'Live X sources were unavailable this run; showing the last known last-post date.'
+    } else if (postSource === 'x-fallback') {
+      facts.xPostDetail = `Using the durable fallback record (last fetched ${fmtDateTime(fallback.fetchedAt)}, within the ${X_FALLBACK_REFETCH_DAYS}-day floor); X network requests were skipped.`
     }
   } else {
     const summary = postSource === 'cache'
-      ? { status: 'cached-unavailable', detail: 'Using a recent cached X result; no public post timestamp was available.' }
-      : unavailablePostSummary(result, postAttempts)
+      ? { status: 'cached-unavailable', detail: `Using a recent cached X result; no public post timestamp was available. (last fetch ${fmtDateTime(cached.checkedAt)})` }
+      : postSource === 'x-fallback'
+        ? { status: 'cached-unavailable', detail: `Using a durable fallback X result; no public post timestamp was available. (last fetch ${fmtDateTime(fallback.fetchedAt)})` }
+        : unavailablePostSummary(result, postAttempts)
     facts.xPostStatus = summary.status
     facts.xPostDetail = summary.detail
   }

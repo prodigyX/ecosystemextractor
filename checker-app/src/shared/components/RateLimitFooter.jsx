@@ -86,7 +86,8 @@ export function RateLimitFooter({ refreshToken }) {
   return (
     <footer className="app-footer">
       <span className="app-footer-label">API quota</span>
-      <QuotaStatus label="X" snapshot={snapshot?.x} />
+      <QuotaStatus label="X (API)" snapshot={snapshot?.xOfficial} />
+      <QuotaStatus label="X (syndication)" snapshot={snapshot?.x} />
       <QuotaStatus label="GitHub" snapshot={snapshot?.github} />
     </footer>
   )

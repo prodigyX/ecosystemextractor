@@ -14,6 +14,16 @@ export const BERACHAIN_DIRECTORY_URL = 'https://explore.berachain.com/'
 export const SIGNAL_FRESH_FETCH_DAYS = 5
 export const SIGNAL_FRESH_FETCH_MS = SIGNAL_FRESH_FETCH_DAYS * 24 * 60 * 60 * 1000
 
+// Durable X fallback (server/xFallback.js): a separate table from the
+// regular signal cache above, never wiped by "Clear check cache". It's a
+// hard floor on how often X gets a live call, independent of the working
+// cache — clearing the cache must not become a way to bypass X's own rate
+// limits via repeated clear-then-recheck cycles. Only overwritten when a
+// live fetch actually produces a usable result (never with a lesser/empty
+// one), and only consulted once the regular cache above is stale/cleared.
+export const X_FALLBACK_REFETCH_DAYS = 7
+export const X_FALLBACK_REFETCH_MS = X_FALLBACK_REFETCH_DAYS * 24 * 60 * 60 * 1000
+
 export const X_RESULT_CACHE_ENABLED = true
 export const GITHUB_RESULT_CACHE_ENABLED = true
 

@@ -68,6 +68,12 @@ export function fmtDate(dateLike) {
   return Number.isNaN(d.getTime()) ? String(dateLike) : d.toISOString().slice(0, 10)
 }
 
+/** Like fmtDate but includes the time (UTC, minute precision) — for evidence detail text that says "last fetch was <when>". */
+export function fmtDateTime(dateLike) {
+  const d = new Date(dateLike)
+  return Number.isNaN(d.getTime()) ? String(dateLike) : d.toISOString().slice(0, 16).replace('T', ' ') + ' UTC'
+}
+
 /** Evidence item helper: level is 'good' | 'warn' | 'bad' | 'info' */
 export function ev(level, label, detail = null, delta = 0) {
   return { level, label, detail, delta }

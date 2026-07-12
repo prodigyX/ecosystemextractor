@@ -11,6 +11,7 @@ import { fmtSavedAt } from '../lib/formatters.js'
  *   parseError: string|null,
  *   onDrop: (e: React.DragEvent) => void,
  *   onBrowseClick: () => void,
+ *   uploadJsonEnabled: boolean,
  *   onFetchFromBerachain: () => void,
  *   onUseLastProjectList: () => void,
  *   history: import('../../features/saved-runs/savedRunsService.js').SavedRunMeta[],
@@ -24,6 +25,7 @@ export function Dropzone({
   parseError,
   onDrop,
   onBrowseClick,
+  uploadJsonEnabled,
   onFetchFromBerachain,
   onUseLastProjectList,
   history,
@@ -105,16 +107,19 @@ export function Dropzone({
           type="button"
           className="source-option source-option-upload"
           onClick={onBrowseClick}
-          disabled={fetching || historyBusy}
+          disabled={fetching || historyBusy || !uploadJsonEnabled}
+          title={uploadJsonEnabled ? undefined : 'Temporarily disabled'}
         >
           <span className="source-option-icon" aria-hidden="true">↑</span>
           <span className="source-option-copy">
             <span className="source-option-label">Upload JSON</span>
             <span className="source-option-description">
-              Select an ecosystem extract from your computer.
+              {uploadJsonEnabled
+                ? 'Select an ecosystem extract from your computer.'
+                : 'Temporarily disabled.'}
             </span>
           </span>
-          <span className="source-option-arrow" aria-hidden="true">→</span>
+          {uploadJsonEnabled && <span className="source-option-arrow" aria-hidden="true">→</span>}
         </button>
 
         {history.length > 0 && (
@@ -179,7 +184,9 @@ export function Dropzone({
         </div>
       )}
 
-      <p className="source-drop-hint">You can also drag and drop a JSON file anywhere in this panel.</p>
+      {uploadJsonEnabled && (
+        <p className="source-drop-hint">You can also drag and drop a JSON file anywhere in this panel.</p>
+      )}
       {parseError && <p className="dropzone-error" role="alert">{parseError}</p>}
     </section>
   )

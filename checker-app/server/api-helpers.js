@@ -38,14 +38,35 @@ export function sanitizeProjects(raw) {
   }))
 }
 
+/**
+ * Rejects any request that isn't verifiably from this app's own frontend.
+ * A same-origin fetch()/XHR call from our own JS always carries an Origin
+ * header (browsers send it on same-origin requests too, not just
+ * cross-origin ones) or, failing that, a Referer pointing back at this
+ * host. A bare script/curl/Postman call typically sends neither — treating
+ * "no Origin header" as automatically same-origin (the previous behavior)
+ * let any such direct call bypass the UI entirely, which is exactly what
+ * this check exists to prevent.
+ */
 export function isSameOrigin(req) {
+  const host = req.headers.host
   const origin = req.headers.origin
-  if (!origin) return true
-  try {
-    return new URL(origin).host === req.headers.host
-  } catch {
-    return false
+  if (origin) {
+    try {
+      return new URL(origin).host === host
+    } catch {
+      return false
+    }
   }
+  const referer = req.headers.referer
+  if (referer) {
+    try {
+      return new URL(referer).host === host
+    } catch {
+      return false
+    }
+  }
+  return false
 }
 
 export async function readJsonBody(req, limit = MAX_BODY_BYTES) {

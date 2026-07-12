@@ -2,6 +2,12 @@
 // hunting through the signal implementations.
 export const BERACHAIN_DIRECTORY_URL = 'https://explore.berachain.com/'
 
+// Feature flags exposed to the client via GET /api/app-config (see
+// api/app-config.js) — flip here to re-enable, no other code changes needed.
+// "Upload JSON" is purely client-side (FileReader, no server endpoint), so
+// this flag only controls whether the UI offers the button/drop-zone at all.
+export const UPLOAD_JSON_ENABLED = false
+
 // Rate-limit protection for X and GitHub: before calling either live API for
 // a given record (an X handle, or a GitHub owner/repo — see the `x:<handle>`
 // and `github:<owner>/<repo>` cache keys in server/signals/x.js and

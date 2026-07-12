@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Header } from '../shared/components/Header.jsx'
 import { Dropzone } from '../shared/components/Dropzone.jsx'
 import { CheckModePrompt } from '../shared/components/CheckModePrompt.jsx'
@@ -45,6 +45,24 @@ export function DashboardPage() {
   // '__latest__' sentinel for "Restore last run" (which has no id client-side
   // until the server resolves it) — null when nothing is loading.
   const [loadingRunId, setLoadingRunId] = useState(null)
+  // Server-side feature flags (server/config.js), fetched once on mount.
+  // Defaults to disabled until the fetch resolves — a flag whose whole
+  // purpose is to turn a feature off shouldn't flash it on first.
+  const [uploadJsonEnabled, setUploadJsonEnabled] = useState(false)
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/app-config')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data) setUploadJsonEnabled(Boolean(data.uploadJsonEnabled))
+      })
+      .catch(() => {
+        // Stay disabled if the config endpoint is unreachable.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const projectsState = useProjects()
   const quick = useQuickCheck(projectsState.projects, projectsState.setProjects)
@@ -112,6 +130,7 @@ export function DashboardPage() {
   }, [])
 
   const onFileInput = (e) => {
+    if (!uploadJsonEnabled) return
     const file = e.target.files[0]
     projectsState.handleFile(file, resetForNewLoad)
     // Allow selecting the same file again after it has changed on disk.
@@ -120,7 +139,7 @@ export function DashboardPage() {
 
   const onDrop = (e) => {
     e.preventDefault()
-    if (busy) return
+    if (busy || !uploadJsonEnabled) return
     projectsState.handleFile(e.dataTransfer.files[0], resetForNewLoad)
   }
 
@@ -275,6 +294,7 @@ export function DashboardPage() {
         onUseLastProjectList={handleUseLastProjectList}
         fileInputRef={fileInputRef}
         onFileInput={onFileInput}
+        uploadJsonEnabled={uploadJsonEnabled}
         onRunNewCheck={handleRunNewCheck}
         onDownloadCsv={() => downloadCsv(projectsState.projects, deepCheck.deep)}
         onDownloadJson={() => downloadJson(projectsState.projects, deepCheck.deep)}
@@ -294,6 +314,7 @@ export function DashboardPage() {
           parseError={projectsState.parseError}
           onDrop={onDrop}
           onBrowseClick={() => fileInputRef.current?.click()}
+          uploadJsonEnabled={uploadJsonEnabled}
           onFetchFromBerachain={handleFetchFromBerachain}
           onUseLastProjectList={handleUseLastProjectList}
           history={savedRun.history}

@@ -17,6 +17,7 @@ import { fmtSavedAt } from '../lib/formatters.js'
  *   onUseLastProjectList: () => void,
  *   fileInputRef: {current: HTMLInputElement|null},
  *   onFileInput: (e: React.ChangeEvent<HTMLInputElement>) => void,
+ *   uploadJsonEnabled: boolean,
  *   onRunNewCheck: () => void,
  *   onDownloadCsv: () => void,
  *   onDownloadJson: () => void,
@@ -41,6 +42,7 @@ export function Header({
   onUseLastProjectList,
   fileInputRef,
   onFileInput,
+  uploadJsonEnabled,
   onRunNewCheck,
   onDownloadCsv,
   onDownloadJson,
@@ -60,16 +62,25 @@ export function Header({
   return (
     <header className="header">
       <div className="header-left">
-        <img src="/favicon.svg" alt="" className="header-logo" />
-        <div>
-          <h1>Ecosystem Checker</h1>
-          {fileName && (
-            <span className="subtitle">
-              {fileName} · {projectsCount} projects
-              {loadedAt && ` · results from ${fmtSavedAt(loadedAt)}`}
-            </span>
-          )}
-        </div>
+        <button
+          type="button"
+          className="header-brand"
+          onClick={onRunNewCheck}
+          disabled={busy}
+          aria-label="Start over — back to Step 1 of 2"
+          title={busy ? 'Finish the current check first' : 'Back to Step 1 of 2'}
+        >
+          <img src="/favicon.svg" alt="" className="header-logo" />
+          <div>
+            <h1>Ecosystem Checker</h1>
+            {fileName && (
+              <span className="subtitle">
+                {fileName} · {projectsCount} projects
+                {loadedAt && ` · results from ${fmtSavedAt(loadedAt)}`}
+              </span>
+            )}
+          </div>
+        </button>
       </div>
       <div className="header-right">
         {(checking || deepRunning) && (
@@ -141,10 +152,11 @@ export function Header({
               <button
                 type="button"
                 onClick={(event) => runDataMenuAction(event, () => fileInputRef.current?.click())}
-                disabled={busy}
+                disabled={busy || !uploadJsonEnabled}
+                title={uploadJsonEnabled ? undefined : 'Temporarily disabled'}
               >
                 <span aria-hidden="true">↑</span>
-                <span><strong>Upload JSON</strong><small>Replace current data</small></span>
+                <span><strong>Upload JSON</strong><small>{uploadJsonEnabled ? 'Replace current data' : 'Temporarily disabled'}</small></span>
               </button>
               {savedMeta && (
                 <button

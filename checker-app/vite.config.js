@@ -6,11 +6,11 @@ import { dirname } from 'node:path'
 import { runPipeline } from './server/pipeline.js'
 import { createStore } from './server/store.js'
 import { loadEnv } from './server/util.js'
-import { BERACHAIN_DIRECTORY_URL } from './server/config.js'
+import { BERACHAIN_DIRECTORY_URL, UPLOAD_JSON_ENABLED } from './server/config.js'
 import { getRateLimitSnapshot, refreshGithubRateLimit } from './server/rateLimitStatus.js'
 import { getSql } from './server/db.js'
 import { listSavedRunsMeta, getSavedRun, saveSnapshot, clearAllSavedRuns } from './server/savedRuns.js'
-import { isValidUuid, getClientIp } from './server/api-helpers.js'
+import { isValidUuid, getClientIp, isSameOrigin } from './server/api-helpers.js'
 import { isRateLimited } from './server/rateLimiter.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -129,15 +129,15 @@ function securityHeadersPlugin() {
           ].join('; ')
         )
 
-        // CSRF guard for the API: a cross-site page can't be allowed to trigger
-        // server-side checks (or Puppeteer runs) through the user's browser.
-        if (req.url?.startsWith('/api/')) {
-          const origin = req.headers.origin
-          if (origin && new URL(origin).host !== req.headers.host) {
-            res.statusCode = 403
-            res.end('Cross-origin requests are not allowed')
-            return
-          }
+        // CSRF guard for the API: a cross-site page (or a direct curl/script
+        // call with no Origin/Referer at all) can't be allowed to trigger
+        // server-side checks (or Puppeteer runs) by going around the UI —
+        // see server/api-helpers.js's isSameOrigin for the exact rule, kept
+        // identical here so dev matches the production api/*.js behavior.
+        if (req.url?.startsWith('/api/') && !isSameOrigin(req)) {
+          res.statusCode = 403
+          res.end('Cross-origin requests are not allowed')
+          return
         }
         next()
       })
@@ -284,6 +284,17 @@ function berachainExtractPlugin() {
             res.end()
           }
         }
+      })
+
+      // ── App config: exposes server/config.js feature flags to the client ──
+      server.middlewares.use('/api/app-config', async (req, res) => {
+        if (req.method !== 'GET') {
+          res.statusCode = 405
+          res.end('GET only')
+          return
+        }
+        res.setHeader('Content-Type', 'application/json')
+        res.end(JSON.stringify({ uploadJsonEnabled: UPLOAD_JSON_ENABLED }))
       })
 
       // ── Rate-limit status: last-observed X syndication / GitHub API quota ──

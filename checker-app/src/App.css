@@ -1928,6 +1928,7 @@ tbody tr.row-selected {
 .category-tile.score-unclear       { border-left-color: #fedb71; }
 .category-tile.score-likely-dead   { border-left-color: #ec8a19; }
 .category-tile.score-dead          { border-left-color: #e92a67; }
+.category-tile.score-unknown       { border-left-color: #6b7280; }
 
 .category-tile-icon {
   font-size: 0.85rem;
@@ -1940,6 +1941,21 @@ tbody tr.row-selected {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.category-tile-info {
+  cursor: help;
+  color: var(--text-dim);
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.category-tile-info:hover {
+  opacity: 1;
+  color: var(--text-muted);
 }
 
 .category-tile-score {
@@ -1964,6 +1980,7 @@ tbody tr.row-selected {
 .category-tile-status.status-unclear       { color: #fedb71; }
 .category-tile-status.status-likely-dead   { color: #ec8a19; }
 .category-tile-status.status-dead          { color: #f3527f; }
+.category-tile-status.status-unknown       { color: #6b7280; }
 
 /* ── Detail bottom panels ── */
 .detail-panels {
@@ -2600,7 +2617,8 @@ tbody tr.row-selected {
 .category-tile.score-likely-active,
 .category-tile.score-unclear,
 .category-tile.score-likely-dead,
-.category-tile.score-dead {
+.category-tile.score-dead,
+.category-tile.score-unknown {
   border-left-color: rgba(255, 255, 255, 0.085);
 }
 
@@ -2613,12 +2631,13 @@ tbody tr.row-selected {
 
 .category-tile-icon {
   display: grid;
-  width: 28px;
-  height: 28px;
+  width: 38px;
+  height: 38px;
   place-items: center;
-  border-radius: 8px;
+  border-radius: 9px;
   background: var(--surface);
   color: var(--text-muted);
+  font-size: 1.3rem;
 }
 
 .category-tile-status {

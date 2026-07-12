@@ -48,6 +48,7 @@ export const TIER_COLORS = {
   'likely-dead': '#ec8a19',
   dead: '#f3527f',
   error: '#f3527f',
+  unknown: '#6b7280',
 }
 
 /** One-line plain-language summary per verdict tier, shown under the gauge. */
@@ -119,6 +120,20 @@ export function computeQuickCounts(projects) {
   }
 }
 
+/** Human-readable name per real signal-check, used to build each category tile's "based on" tooltip. */
+const SIGNAL_LABELS = {
+  website: 'Website uptime',
+  'dns-ssl': 'DNS/SSL',
+  domain: 'Domain registration',
+  sitemap: 'Sitemap/RSS freshness',
+  content: 'Homepage content',
+  github: 'GitHub activity',
+  x: 'X (Twitter) activity',
+  discord: 'Discord',
+  telegram: 'Telegram',
+  defillama: 'DefiLlama TVL',
+}
+
 /**
  * Real signal-check names (see server/pipeline.js) grouped into the
  * categories shown as sub-score tiles on the project detail modal. Every
@@ -161,6 +176,24 @@ function verdictFromScore(score) {
 }
 
 /**
+ * Per-category "we never even found a data source" check — when true, the
+ * category shows a hard 0 with a distinct "Unknown" status instead of the
+ * normal 50+delta formula, so a genuinely absent signal (no GitHub repo
+ * linked anywhere, project not listed on DefiLlama at all) isn't confused
+ * with a real "quiet" 50 for a source that exists but is just inactive.
+ */
+const UNKNOWN_IF_MISSING = {
+  development: (facts) => !facts.githubUrl,
+  onchain: (facts) => !facts.llamaSlug,
+}
+
+/** Tooltip text shown in place of the normal "Based on: ..." basis when a category is in the unknown state above. */
+const UNKNOWN_REASONS = {
+  development: "No GitHub link found — Development can't be scored.",
+  onchain: "Not listed on DefiLlama — On-chain Activity can't be scored.",
+}
+
+/**
  * Re-aggregates a project's real evidence into the category buckets above.
  * Each category's score uses the exact same formula as the overall score
  * (50 base + sum of that category's evidence deltas, clamped 0-100, with a
@@ -168,10 +201,22 @@ function verdictFromScore(score) {
  * can't be outweighed to invisibility — see server/pipeline.js scoreVerdict)
  * — just scoped to a subset of signals, not a separately invented metric.
  * @param {Array<{signal: string, delta: number, level: string}>} evidence
- * @returns {Array<{key: string, label: string, icon: string, score: number, verdict: Verdict}>}
+ * @param {{githubUrl?: string|null, llamaSlug?: string|null}} [facts] See UNKNOWN_IF_MISSING.
+ * @returns {Array<{key: string, label: string, icon: string, score: number, verdict: Verdict|'unknown', statusWord: string, basis: string}>}
  */
-export function computeCategoryScores(evidence) {
+export function computeCategoryScores(evidence, facts = {}) {
   return CATEGORIES.map((cat) => {
+    if (UNKNOWN_IF_MISSING[cat.key]?.(facts)) {
+      return {
+        key: cat.key,
+        label: cat.label,
+        icon: cat.icon,
+        score: 0,
+        verdict: 'unknown',
+        statusWord: 'Unknown',
+        basis: UNKNOWN_REASONS[cat.key],
+      }
+    }
     const catEvidence = evidence.filter((e) => cat.signals.includes(e.signal))
     const delta = catEvidence.reduce((sum, e) => sum + (e.delta || 0), 0)
     const hasBad = catEvidence.some((e) => e.level === 'bad')
@@ -186,6 +231,7 @@ export function computeCategoryScores(evidence) {
       score,
       verdict,
       statusWord: cat.statusWords[verdict] ?? '',
+      basis: cat.signals.map((s) => SIGNAL_LABELS[s] ?? s).join(', '),
     }
   })
 }

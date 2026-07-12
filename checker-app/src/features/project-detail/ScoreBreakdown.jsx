@@ -3,10 +3,10 @@ import { computeCategoryScores, TIER_COLORS } from '../../shared/domain/scoring.
 /**
  * Horizontal per-category score bars shown beside the gauge — the same real
  * sub-scores as the category tiles, rendered as a compact breakdown.
- * @param {{evidence: Array<{signal: string, delta: number}>}} props
+ * @param {{evidence: Array<{signal: string, delta: number}>, facts?: {githubUrl?: string|null}}} props
  */
-export function ScoreBreakdown({ evidence }) {
-  const categories = computeCategoryScores(evidence)
+export function ScoreBreakdown({ evidence, facts }) {
+  const categories = computeCategoryScores(evidence, facts)
   return (
     <div className="score-breakdown">
       <div className="score-breakdown-title">Score Breakdown</div>

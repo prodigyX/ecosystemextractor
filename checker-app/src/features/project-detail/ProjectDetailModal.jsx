@@ -169,7 +169,7 @@ export function ProjectDetailModal({ project, result, isFavorite, onToggleFavori
               </div>
             </div>
 
-            <CategoryTiles evidence={evidence} />
+            <CategoryTiles evidence={evidence} facts={facts} />
           </section>
 
           <section className="detail-section" aria-labelledby="detail-signals-heading">

@@ -48,15 +48,55 @@ function attempt(source, status, detail = null) {
 
 const DISCORD_LINK_RE = /https?:\/\/[^\s"'<>]*(?:discord\.gg|discord\.com\/invite)\/[\w-]+/i
 const TELEGRAM_LINK_RE = /https?:\/\/[^\s"'<>]*t\.me\/[\w+]+/i
+const LINK_AGGREGATOR_RE = /(?:linktr\.ee|bio\.link|beacons\.ai|lnk\.bio|solo\.to|campsite\.bio|taplink\.cc|msha\.ke|direct\.me|allmylinks\.com)\/[\w-]+/i
+
+function scanTextForSocialLinks(text) {
+  return {
+    discordLink: text.match(DISCORD_LINK_RE)?.[0] ?? null,
+    telegramLink: text.match(TELEGRAM_LINK_RE)?.[0] ?? null,
+  }
+}
+
+/**
+ * Some projects put a Linktree (or similar link-in-bio aggregator) as their
+ * one X profile link instead of a direct Discord/Telegram invite. Fetches
+ * that page and scans it the same way. Linktree itself server-renders its
+ * link list into a `__NEXT_DATA__` JSON blob (like X's own syndication
+ * page) — parsed for precision when present; otherwise falls back to a raw
+ * text scan, which still works fine for simpler link-list services.
+ */
+async function scanLinkAggregatorPage(url) {
+  try {
+    const res = await fetchTimeout(url, {}, 8000)
+    if (!res.ok) return { discordLink: null, telegramLink: null }
+    const html = await res.text()
+    const nextData = html.match(/__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)
+    if (nextData) {
+      try {
+        const links = JSON.parse(nextData[1])?.props?.pageProps?.links
+        if (Array.isArray(links)) {
+          return scanTextForSocialLinks(links.map((l) => l?.url).filter(Boolean).join(' '))
+        }
+      } catch {
+        // Malformed/unexpected JSON — fall through to the raw HTML scan below.
+      }
+    }
+    return scanTextForSocialLinks(html)
+  } catch {
+    return { discordLink: null, telegramLink: null }
+  }
+}
 
 /**
  * Scans an fxtwitter user object's bio (description text, its t.co-expanded
  * "facets", and the profile's pinned website link) for a Discord/Telegram
  * invite — some projects only ever put these in their X bio, never on the
- * homepage. Only a supplementary source: server/pipeline.js prefers whatever
- * the homepage scrape (server/signals/content.js) already found.
+ * homepage. If the only link found is a link-aggregator page (Linktree etc.)
+ * rather than a direct invite, follows it one level to look there too. Only
+ * a supplementary source: server/pipeline.js prefers whatever the homepage
+ * scrape (server/signals/content.js) already found.
  */
-function findSocialLinksInBio(user) {
+async function findSocialLinksInBio(user) {
   // Bio and website are the obvious spots, but some projects repurpose the
   // profile's "location" field as a link slot too (X only gives you one
   // prominent link field, so location is a common workaround) — scan all
@@ -67,10 +107,18 @@ function findSocialLinksInBio(user) {
   }
   let discordLink = null
   let telegramLink = null
+  let aggregatorUrl = null
   for (const text of candidates) {
     if (!text) continue
-    if (!discordLink) discordLink = text.match(DISCORD_LINK_RE)?.[0] ?? null
-    if (!telegramLink) telegramLink = text.match(TELEGRAM_LINK_RE)?.[0] ?? null
+    const found = scanTextForSocialLinks(text)
+    discordLink ??= found.discordLink
+    telegramLink ??= found.telegramLink
+    if (!aggregatorUrl) aggregatorUrl = text.match(LINK_AGGREGATOR_RE)?.[0] ?? null
+  }
+  if ((!discordLink || !telegramLink) && aggregatorUrl) {
+    const fromAggregator = await scanLinkAggregatorPage(`https://${aggregatorUrl}`)
+    discordLink ??= fromAggregator.discordLink
+    telegramLink ??= fromAggregator.telegramLink
   }
   return { discordLink, telegramLink }
 }
@@ -92,7 +140,7 @@ async function viaFxTwitter(handle) {
     followers: data.user.followers ?? null,
     tweetCount: data.user.tweets ?? null,
     protected: data.user.protected === true,
-    ...findSocialLinksInBio(data.user),
+    ...(await findSocialLinksInBio(data.user)),
   }
 }
 

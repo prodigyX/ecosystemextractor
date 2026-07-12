@@ -473,6 +473,21 @@ body {
   opacity: 0.62;
 }
 
+.source-option-loading {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.source-option-loading:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.source-option-loading .source-option-icon {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-dim);
+}
+
 .source-option-icon,
 .check-mode-icon {
   display: grid;

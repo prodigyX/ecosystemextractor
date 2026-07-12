@@ -36,6 +36,11 @@ export const GITHUB_RESULT_CACHE_ENABLED = true
 // Activity age bands are expressed in days. Keep values in ascending order.
 export const X_LAST_POST_AGE_DAYS = Object.freeze({ active: 30, recent: 90, quiet: 180, silent: 365 })
 
+// X follower-count bands. Below `veryLow`, a thin audience is treated as a
+// possible clone/scam signal (bad, caps the overall score) rather than just
+// a weak one — a real project's account rarely sits under ~1.5K followers.
+export const X_FOLLOWER_THRESHOLDS = Object.freeze({ veryLow: 1500, weak: 3000, decent: 5000, established: 20000 })
+
 export const X_SYNDICATION_INTERVAL_MS = 10 * 1000
 export const X_SYNDICATION_COOLDOWN_MS = 15 * 60 * 1000
 

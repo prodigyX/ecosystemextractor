@@ -14,6 +14,7 @@ import { fmtSavedAt } from '../lib/formatters.js'
  *   onFetchFromBerachain: () => void,
  *   onUseLastProjectList: () => void,
  *   history: import('../../features/saved-runs/savedRunsService.js').SavedRunMeta[],
+ *   historyLoading: boolean,
  *   onLoadHistory: (id: string) => void,
  *   loadingHistoryId: string|null,
  * }} props
@@ -26,6 +27,7 @@ export function Dropzone({
   onFetchFromBerachain,
   onUseLastProjectList,
   history,
+  historyLoading,
   onLoadHistory,
   loadingHistoryId,
 }) {
@@ -68,6 +70,18 @@ export function Dropzone({
           </span>
           {!fetching && <span className="source-option-arrow" aria-hidden="true">→</span>}
         </button>
+
+        {historyLoading && history.length === 0 && (
+          <div className="source-option source-option-loading" aria-live="polite" aria-busy="true">
+            <span className="source-option-icon" aria-hidden="true">
+              <span className="spinner-ring" />
+            </span>
+            <span className="source-option-copy">
+              <span className="source-option-label">Checking for previous runs…</span>
+              <span className="source-option-description">Looking up saved history from the server.</span>
+            </span>
+          </div>
+        )}
 
         {history.length > 0 && (
           <button

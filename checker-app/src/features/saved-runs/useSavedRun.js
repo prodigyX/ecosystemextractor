@@ -28,6 +28,7 @@ const MAX_SAVED_RUNS = 10
  */
 export function useSavedRun({ projects, deep, fileName, checking, deepRunning, quickDone, deepDone }) {
   const [history, setHistory] = useState([])
+  const [historyLoading, setHistoryLoading] = useState(true)
   const [loadedAt, setLoadedAt] = useState(null)
   const savedMeta = history[0] ?? null
 
@@ -57,6 +58,9 @@ export function useSavedRun({ projects, deep, fileName, checking, deepRunning, q
   // itself doesn't reference a function whose body sets state — the fetch
   // is still async (the .then callback is what actually calls setHistory),
   // this just keeps the effect's own body free of a direct setState call.
+  // historyLoading covers only this initial mount fetch — the Dropzone
+  // shows a loader while it's true, so a brand-new page load doesn't look
+  // like "no history exists" during the brief window before this resolves.
   useEffect(() => {
     let cancelled = false
     fetchSavedHistoryMeta()
@@ -65,6 +69,9 @@ export function useSavedRun({ projects, deep, fileName, checking, deepRunning, q
       })
       .catch(() => {
         // Most likely no database is linked yet — history just stays empty.
+      })
+      .finally(() => {
+        if (!cancelled) setHistoryLoading(false)
       })
     return () => {
       cancelled = true
@@ -129,5 +136,5 @@ export function useSavedRun({ projects, deep, fileName, checking, deepRunning, q
     setLoadedAt(null)
   }, [])
 
-  return { history, savedMeta, loadedAt, loadRun, loadLastRun, clearLoadedAt, refreshHistory }
+  return { history, historyLoading, savedMeta, loadedAt, loadRun, loadLastRun, clearLoadedAt, refreshHistory }
 }

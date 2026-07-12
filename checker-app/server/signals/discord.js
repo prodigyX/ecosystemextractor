@@ -37,11 +37,18 @@ export async function checkDiscord(project, ctx) {
       } else if (members >= 500) {
         evidence.push(ev('good', 'Discord community small', detail, 2))
       } else {
-        evidence.push(ev('warn', 'Discord community tiny (<500)', detail, -1))
+        // A near-empty server is the same strength of red flag as a broken
+        // invite link below — both read as "no real community here" and
+        // cap the score the same way (archived repo, suspended X account).
+        evidence.push(ev('bad', 'Discord community tiny (<500) — possible clone/scam', detail, -25))
       }
     } else if (res.status === 404 || res.status === 410) {
       facts.discordValid = false
-      evidence.push(ev('warn', 'Discord invite expired/invalid', link, -4))
+      // A broken invite link is a stronger red flag than "no community yet" —
+      // it means the project once had (or claimed) a Discord and let the
+      // link rot, which reads the same as other 'bad' abandonment signals
+      // (archived GitHub repo, suspended X account) and caps the score.
+      evidence.push(ev('bad', 'Discord invite expired/invalid', link, -25))
     } else {
       // A non-2xx/404/410 response (e.g. a transient 5xx or unexpected
       // status) tells us nothing conclusive about the invite — report it as

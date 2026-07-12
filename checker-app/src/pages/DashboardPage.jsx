@@ -297,6 +297,7 @@ export function DashboardPage() {
           onFetchFromBerachain={handleFetchFromBerachain}
           onUseLastProjectList={handleUseLastProjectList}
           history={savedRun.history}
+          historyLoading={savedRun.historyLoading}
           onLoadHistory={handleSelectHistory}
           loadingHistoryId={loadingRunId}
         />

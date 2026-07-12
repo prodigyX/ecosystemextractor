@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { ev, fmtDate } from '../util.js'
+import { ev, fmtDate, daysAgo } from '../util.js'
 
 const DEAD_KEYWORDS = [
   'shutting down', 'shut down', 'has shutdown', 'is shutting',
@@ -102,7 +102,15 @@ export async function checkContent(project, ctx) {
         facts.contentChanged = false
         const since = prev.lastChanged || prev.firstSeen
         if (since) {
-          evidence.push(ev('info', 'Homepage unchanged since', fmtDate(since), 0))
+          // A byte-identical homepage for a full year is a real stagnation
+          // signal — same weight class as the other "quiet" 91-180d bands
+          // (X, GitHub) — not just informational trivia.
+          const age = daysAgo(since)
+          if (age != null && age >= 365) {
+            evidence.push(ev('warn', 'Homepage unchanged for 1+ year', `since ${fmtDate(since)}`, -8))
+          } else {
+            evidence.push(ev('info', 'Homepage unchanged since', fmtDate(since), 0))
+          }
         }
         await ctx.store.set(key, { ...prev, lastChecked: nowIso })
       } else {

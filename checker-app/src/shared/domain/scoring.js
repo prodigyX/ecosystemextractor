@@ -25,10 +25,14 @@ export const QUALITY_LABELS = {
   checking: ['checking', 'Checking…'],
 }
 
-/** Badge class + risk-tier label per verdict, for the "Verdict" column. */
+/** Badge class + risk-tier label per verdict, for the "Verdict" column. Only a
+ * genuinely strong score (active, 75+) reads as "Low Risk" — likely-active
+ * (60-74) is still "Medium", same tier (and same badge color, via the 'maybe'
+ * class) as unclear, since 60 is not a strong enough score to call low-risk
+ * on its own. */
 export const RISK_LABELS = {
   active: ['alive', 'Low Risk'],
-  'likely-active': ['likely-active', 'Low Risk'],
+  'likely-active': ['maybe', 'Medium'],
   unclear: ['maybe', 'Medium'],
   'likely-dead': ['not-found', 'High Risk'],
   dead: ['dead', 'High Risk'],

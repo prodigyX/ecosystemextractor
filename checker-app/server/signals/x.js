@@ -8,6 +8,7 @@ import {
   SIGNAL_FRESH_FETCH_DAYS,
   X_FALLBACK_REFETCH_MS,
   X_FALLBACK_REFETCH_DAYS,
+  X_FOLLOWER_THRESHOLDS,
 } from '../config.js'
 import { recordXRateLimit, recordXOfficialRateLimit } from '../rateLimitStatus.js'
 import { getXFallback, saveXFallback } from '../xFallback.js'
@@ -204,18 +205,30 @@ export function followerEvidence(handle, result) {
   }
   // X is one of the two primary "is this project alive at all" signals (with
   // website liveness), so its deltas are weighted higher than secondary
-  // community signals like Discord/Telegram. A meaningful audience requires
-  // more than 2,000 followers — below that line reads as a weak signal.
-  if (followers >= 20000) {
-    return metricEvidence('x-followers', 'good', 'X established audience (20K+ followers)', detail, 10)
+  // community signals like Discord/Telegram. Below X_FOLLOWER_THRESHOLDS.veryLow,
+  // a real project's account rarely has that thin an audience — it reads as a
+  // possible clone/scam rather than just a weak one, so it's a 'bad' signal
+  // (caps the overall score) instead of a 'warn'.
+  const { veryLow, weak, decent, established } = X_FOLLOWER_THRESHOLDS
+  if (followers >= established) {
+    return metricEvidence('x-followers', 'good', `X established audience (${established / 1000}K+ followers)`, detail, 10)
   }
-  if (followers >= 5000) {
-    return metricEvidence('x-followers', 'good', 'X decent audience (5K+ followers)', detail, 6)
+  if (followers >= decent) {
+    return metricEvidence('x-followers', 'good', `X decent audience (${decent / 1000}K+ followers)`, detail, 6)
   }
-  if (followers > 2000) {
-    return metricEvidence('x-followers', 'info', 'X small audience (2K+ followers)', detail, 3)
+  if (followers > weak) {
+    return metricEvidence('x-followers', 'info', `X small audience (${weak / 1000}K+ followers)`, detail, 3)
   }
-  return metricEvidence('x-followers', 'warn', 'X weak audience (≤2K followers)', detail, -4)
+  if (followers >= veryLow) {
+    return metricEvidence('x-followers', 'warn', `X weak audience (${veryLow / 1000}K–${weak / 1000}K followers)`, detail, -4)
+  }
+  return metricEvidence(
+    'x-followers',
+    'bad',
+    `X very low audience (<${veryLow / 1000}K followers) — possible clone/scam`,
+    detail,
+    -15
+  )
 }
 
 /** Short "(live)" / "(cached)" / "(stale cache)" / "(fallback)" tag so a shown date's trustworthiness is visible at a glance, not just inferred. */

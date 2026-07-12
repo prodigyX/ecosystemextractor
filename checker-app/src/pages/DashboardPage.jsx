@@ -144,7 +144,11 @@ export function DashboardPage() {
     }
     const { saved } = result
     resetForNewLoad()
-    projectsState.setProjects(saved.projects)
+    // A saved snapshot's projects carry whatever websiteStatus/xStatus they
+    // had at save time (e.g. 'alive') — without resetting those, quickDone
+    // reads as already-true and the fresh check-mode prompt never appears,
+    // same as extractProjects() produces for a brand-new Berachain fetch.
+    projectsState.setProjects(saved.projects.map((p) => ({ ...p, websiteStatus: 'idle', xStatus: 'idle' })))
     projectsState.setFileName(saved.fileName ? `${saved.fileName} (reused list)` : 'Reused project list')
     projectsState.setParseError(null)
   }

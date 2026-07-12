@@ -46,6 +46,35 @@ function attempt(source, status, detail = null) {
   return { source, status, detail }
 }
 
+const DISCORD_LINK_RE = /https?:\/\/[^\s"'<>]*(?:discord\.gg|discord\.com\/invite)\/[\w-]+/i
+const TELEGRAM_LINK_RE = /https?:\/\/[^\s"'<>]*t\.me\/[\w+]+/i
+
+/**
+ * Scans an fxtwitter user object's bio (description text, its t.co-expanded
+ * "facets", and the profile's pinned website link) for a Discord/Telegram
+ * invite — some projects only ever put these in their X bio, never on the
+ * homepage. Only a supplementary source: server/pipeline.js prefers whatever
+ * the homepage scrape (server/signals/content.js) already found.
+ */
+function findSocialLinksInBio(user) {
+  // Bio and website are the obvious spots, but some projects repurpose the
+  // profile's "location" field as a link slot too (X only gives you one
+  // prominent link field, so location is a common workaround) — scan all
+  // three plus any expanded link entities in the bio.
+  const candidates = [user?.website?.url, user?.description, user?.location]
+  for (const facet of user?.raw_description?.facets || []) {
+    if (facet?.type === 'url' && facet.replacement) candidates.push(facet.replacement)
+  }
+  let discordLink = null
+  let telegramLink = null
+  for (const text of candidates) {
+    if (!text) continue
+    if (!discordLink) discordLink = text.match(DISCORD_LINK_RE)?.[0] ?? null
+    if (!telegramLink) telegramLink = text.match(TELEGRAM_LINK_RE)?.[0] ?? null
+  }
+  return { discordLink, telegramLink }
+}
+
 /** FxTwitter user API: reliable existence/profile stats, but no post dates. */
 async function viaFxTwitter(handle) {
   const res = await fetchTimeout(
@@ -63,6 +92,7 @@ async function viaFxTwitter(handle) {
     followers: data.user.followers ?? null,
     tweetCount: data.user.tweets ?? null,
     protected: data.user.protected === true,
+    ...findSocialLinksInBio(data.user),
   }
 }
 
@@ -322,6 +352,8 @@ function profileSnapshot(result) {
     tweetCount: result.tweetCount ?? null,
     protected: result.protected === true,
     suspended: result.suspended === true,
+    discordLink: result.discordLink ?? null,
+    telegramLink: result.telegramLink ?? null,
   }
 }
 
@@ -334,6 +366,8 @@ function mergeProfile(current, next) {
     tweetCount: next.tweetCount ?? current?.tweetCount ?? null,
     protected: next.protected ?? current?.protected ?? false,
     suspended: next.suspended ?? current?.suspended ?? false,
+    discordLink: next.discordLink ?? current?.discordLink ?? null,
+    telegramLink: next.telegramLink ?? current?.telegramLink ?? null,
   }
 }
 
@@ -354,6 +388,11 @@ export async function checkX(project, ctx) {
     xPostDetail: null,
     xPostAttempts: [],
     xSource: null,
+    // Discord/Telegram invites discovered in the X bio (see viaFxTwitter /
+    // findSocialLinksInBio above) — a supplementary source for
+    // server/pipeline.js, used only when the homepage scrape found nothing.
+    xDiscordLink: null,
+    xTelegramLink: null,
   }
   // No X presence at all is a real red flag for a crypto/Web3 project, not
   // just missing data — same severity class as a near-empty audience.
@@ -386,7 +425,7 @@ export async function checkX(project, ctx) {
   // cache above is stale or was cleared. If it's still within its own
   // (longer, clear-immune) window, reuse it instead of hitting X again —
   // this is the hard floor that survives "Clear check cache".
-  const fallback = freshCache ? null : await getXFallback(handle)
+  const fallback = freshCache ? null : await getXFallback(handle.toLowerCase())
   const fallbackAgeMs = fallback?.fetchedAt ? Date.now() - new Date(fallback.fetchedAt).getTime() : Infinity
   const fallbackIsFresh = Boolean(fallback?.result) && fallbackAgeMs < X_FALLBACK_REFETCH_MS
 
@@ -519,6 +558,8 @@ export async function checkX(project, ctx) {
   facts.xExists = result.exists
   facts.xLatestPost = result.latestPost ?? null
   facts.xFollowers = result.followers ?? null
+  facts.xDiscordLink = result.discordLink ?? null
+  facts.xTelegramLink = result.telegramLink ?? null
   facts.xProfileSource = profileSource
   facts.xPostSource = postSource
   facts.xSource = postSource || profileSource
@@ -541,7 +582,7 @@ export async function checkX(project, ctx) {
   // "last known good" floor even after "Clear check cache" wipes the
   // regular cache above.
   if (result.exists != null && (postSource === 'official-api' || postSource === 'syndication')) {
-    await saveXFallback(handle, result)
+    await saveXFallback(handle.toLowerCase(), result)
   }
 
   if (!result.exists) {

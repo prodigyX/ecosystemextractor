@@ -8,8 +8,8 @@ import { checkDiscord } from './signals/discord.js'
 import { checkTelegram } from './signals/telegram.js'
 import { checkDefillama } from './signals/defillama.js'
 import { checkX, xHandleFromUrl } from './signals/x.js'
-import { domainOf, ev } from './util.js'
-import { SCORE_WEIGHTS } from './config.js'
+import { domainOf, ev, daysAgo } from './util.js'
+import { SCORE_WEIGHTS, TELEGRAM_MESSAGE_AGE_DAYS } from './config.js'
 
 const PROJECT_CONCURRENCY = 4
 const MAX_HISTORY_ENTRIES = 10
@@ -88,18 +88,48 @@ async function checkProject(project, shared, emit) {
     collect(r)
   })
 
+  // If the project's source data already lists an X URL, check it
+  // concurrently with http/dns-ssl/domain/defillama as before — its result
+  // is only *awaited* further down, once content.js needs it to fill in any
+  // Discord/Telegram link the homepage scrape didn't find (see
+  // server/signals/x.js's findSocialLinksInBio). By the time content.js is
+  // ready this has almost always already resolved, so this adds no latency.
+  //
+  // If the source data has no X URL at all, don't declare "no X link" yet —
+  // the homepage itself might link to it (see content.js's findLinks, which
+  // now also looks for an x.com/twitter.com profile link). That check is
+  // deferred until after content.js runs, below.
+  const xPromise = project.x ? safeRun('x', () => checkX(project, ctx)) : null
+
   const stageA = [
     httpPromise,
     safeRun('dns-ssl', () => checkDnsSsl(project)).then(collect),
     safeRun('domain', () => checkDomain(project)).then(collect),
     safeRun('defillama', () => checkDefillama(project)).then(collect),
-    safeRun('x', () => checkX(project, ctx)).then(collect),
+    ...(xPromise ? [xPromise.then(collect)] : []),
   ]
 
   // Stage B: needs the HTML / discovered links
   await httpPromise
-  const contentResult = await safeRun('content', () => checkContent(project, ctx))
-  ctx.links = contentResult.facts.links || {}
+  const [contentResult, xResultFromStageA] = await Promise.all([
+    safeRun('content', () => checkContent(project, ctx)),
+    xPromise,
+  ])
+  ctx.links = { ...contentResult.facts.links }
+
+  // project.x was missing — now that the homepage has actually been
+  // scanned, retry with whatever X link (if any) content.js found there
+  // before falling through to checkX's own "no X link" penalty.
+  const xResult = xResultFromStageA ??
+    await safeRun('x', () => checkX({ ...project, x: ctx.links.x }, ctx)).then((r) => {
+      collect(r)
+      return r
+    })
+
+  // The homepage scrape is the primary source — the X bio is only a
+  // fallback for whichever of Discord/Telegram it didn't find.
+  if (!ctx.links.discord && xResult.facts.xDiscordLink) ctx.links.discord = xResult.facts.xDiscordLink
+  if (!ctx.links.telegram && xResult.facts.xTelegramLink) ctx.links.telegram = xResult.facts.xTelegramLink
   collect(contentResult)
 
   // Cross-signal: having just one of Discord/Telegram is normal and isn't
@@ -127,6 +157,24 @@ async function checkProject(project, shared, emit) {
   ]
 
   await Promise.all([...stageA, ...stageB])
+
+  // Cross-signal: no Discord at all, and the only other community channel
+  // (Telegram) has gone dead — on top of Telegram's own per-signal "dead"
+  // finding above, not instead of it. Only fires when there actually is a
+  // Telegram link with a real last-message date (the "neither link found"
+  // case above already covers the no-link scenario).
+  if (!ctx.links.discord && allFacts.telegramLastPost) {
+    const age = daysAgo(allFacts.telegramLastPost)
+    if (age != null && age > TELEGRAM_MESSAGE_AGE_DAYS.inactive) {
+      collect({
+        name: 'telegram',
+        facts: {},
+        evidence: [
+          { ...ev('bad', 'No Discord and Telegram is dead', null, SCORE_WEIGHTS.community.noDiscordDeadTelegram), signal: 'telegram' },
+        ],
+      })
+    }
+  }
 
   const { score, verdict } = scoreVerdict(allEvidence)
   // Group by signal first (in a fixed order, matching the category grouping

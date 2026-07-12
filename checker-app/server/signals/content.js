@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { ev, fmtDate, daysAgo } from '../util.js'
 import { SCORE_WEIGHTS } from '../config.js'
+import { xHandleFromUrl } from './x.js'
 
 const W = SCORE_WEIGHTS.content
 
@@ -30,7 +31,7 @@ function stripTags(html) {
 }
 
 function findLinks(html, baseUrl) {
-  const links = { github: null, discord: null, telegram: null }
+  const links = { github: null, discord: null, telegram: null, x: null }
   const hrefs = [...html.matchAll(/href=["']([^"']+)["']/gi)].map((m) => m[1])
   for (const href of hrefs) {
     let url
@@ -42,6 +43,10 @@ function findLinks(html, baseUrl) {
     if (!links.github && /github\.com\/[\w.-]+/i.test(url)) links.github = url
     if (!links.discord && /(discord\.gg|discord\.com\/invite)\/[\w-]+/i.test(url)) links.discord = url
     if (!links.telegram && /t\.me\/[\w+]+/i.test(url)) links.telegram = url
+    // Reuses x.js's own handle parser (and its home/search/intent/etc.
+    // exclusion list) so a link is only accepted here if checkX would
+    // actually treat it as a real profile — same rule, one source of truth.
+    if (!links.x && xHandleFromUrl(url)) links.x = url
   }
   return links
 }

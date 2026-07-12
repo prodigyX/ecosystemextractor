@@ -141,6 +141,10 @@ export const SCORE_WEIGHTS = Object.freeze({
   // per-signal penalties for what's really one gap.
   community: {
     noSocialLink: -15,
+    // No Discord at all *and* the only other community channel (Telegram)
+    // has gone dead (>TELEGRAM_MESSAGE_AGE_DAYS.inactive days silent) — on
+    // top of Telegram's own -5 "dead" finding, not a replacement for it.
+    noDiscordDeadTelegram: -25,
   },
   defillama: {
     meaningfulTvl: 12,

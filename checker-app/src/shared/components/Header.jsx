@@ -10,12 +10,17 @@ import { fmtSavedAt } from '../lib/formatters.js'
  *   progress: {done: number, total: number},
  *   deepProgress: {done: number, total: number},
  *   savedMeta: import('../../features/saved-runs/savedRunsService.js').SavedRunMeta|null,
+ *   historyCount: number,
  *   onLoadLastRun: () => void,
+ *   onOpenHistory: () => void,
  *   onFetchFromBerachain: () => void,
+ *   onUseLastProjectList: () => void,
  *   fileInputRef: {current: HTMLInputElement|null},
  *   onFileInput: (e: React.ChangeEvent<HTMLInputElement>) => void,
  *   onRunNewCheck: () => void,
  *   onDownloadCsv: () => void,
+ *   onDownloadJson: () => void,
+ *   onClearCache: () => void,
  *   hasCheckResults: boolean,
  *   busy: boolean,
  * }} props
@@ -29,12 +34,17 @@ export function Header({
   progress,
   deepProgress,
   savedMeta,
+  historyCount,
   onLoadLastRun,
+  onOpenHistory,
   onFetchFromBerachain,
+  onUseLastProjectList,
   fileInputRef,
   onFileInput,
   onRunNewCheck,
   onDownloadCsv,
+  onDownloadJson,
+  onClearCache,
   hasCheckResults,
   busy,
 }) {
@@ -94,6 +104,11 @@ export function Header({
             <span aria-hidden="true">↓</span> Export CSV
           </button>
         )}
+        {hasProjects && hasCheckResults && (
+          <button className="btn btn-secondary" onClick={onDownloadJson} disabled={busy}>
+            <span aria-hidden="true">↓</span> Export JSON
+          </button>
+        )}
         {hasProjects && (
           <details className={`header-data-menu ${busy ? 'header-data-menu-disabled' : ''}`}>
             <summary
@@ -113,6 +128,16 @@ export function Header({
                 <span aria-hidden="true">◎</span>
                 <span><strong>Fetch latest</strong><small>From Berachain</small></span>
               </button>
+              {savedMeta && (
+                <button
+                  type="button"
+                  onClick={(event) => runDataMenuAction(event, onUseLastProjectList)}
+                  disabled={busy}
+                >
+                  <span aria-hidden="true">⚡</span>
+                  <span><strong>Use last project list</strong><small>Skip the fetch · {savedMeta.count} projects</small></span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={(event) => runDataMenuAction(event, () => fileInputRef.current?.click())}
@@ -131,6 +156,24 @@ export function Header({
                   <span><strong>Restore last run</strong><small>{fmtSavedAt(savedMeta.savedAt)} · {savedMeta.count} projects</small></span>
                 </button>
               )}
+              {historyCount > 0 && (
+                <button
+                  type="button"
+                  onClick={(event) => runDataMenuAction(event, onOpenHistory)}
+                  disabled={busy}
+                >
+                  <span aria-hidden="true">☰</span>
+                  <span><strong>Select from history</strong><small>{historyCount} saved {historyCount === 1 ? 'run' : 'runs'}</small></span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={(event) => runDataMenuAction(event, onClearCache)}
+                disabled={busy}
+              >
+                <span aria-hidden="true">⟲</span>
+                <span><strong>Clear check cache</strong><small>Forces fresh X/GitHub lookups next run</small></span>
+              </button>
             </div>
           </details>
         )}

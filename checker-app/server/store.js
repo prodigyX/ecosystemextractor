@@ -1,23 +1,27 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+/**
+ * Server-side in-memory key/value cache for deep-check signal data (X/GitHub
+ * lookups, content-hash baselines, score history). This is a single
+ * module-level singleton created once when this module is first loaded by
+ * the process — every request handled by the same warm process/server
+ * shares it, and it is never written to disk.
+ *
+ * Because there is no disk backing, the cache is cleared automatically
+ * whenever the process restarts: a local `npm run dev` restart, or a fresh
+ * serverless cold start on Vercel. (A Vite dev-server HMR reload of this
+ * module does *not* count as a "restart" in that sense — module state only
+ * resets on an actual process restart, which is what matters here: the goal
+ * is "no cache surviving a deploy/redeploy indefinitely", not "clear on
+ * every file save".)
+ */
+const data = Object.create(null)
 
-/** Tiny JSON file store for content hashes / history across runs. */
-export function createStore(path) {
-  let data = {}
-  try {
-    data = JSON.parse(readFileSync(path, 'utf8'))
-  } catch { /* first run */ }
-
-  return {
-    get: (key) => data[key] ?? null,
-    set: (key, value) => {
-      data[key] = value
-    },
-    save: () => {
-      try {
-        writeFileSync(path, JSON.stringify(data, null, 2))
-      } catch (err) {
-        console.error('[store] save failed:', err.message)
-      }
-    },
-  }
+export const store = {
+  get: (key) => data[key] ?? null,
+  set: (key, value) => {
+    data[key] = value
+  },
+  getAll: () => data,
+  clear: () => {
+    for (const key of Object.keys(data)) delete data[key]
+  },
 }

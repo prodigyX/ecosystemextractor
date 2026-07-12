@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { readSavedHistoryMeta, saveSnapshot, loadSnapshot, clearSnapshot } from './savedRunsService.js'
+import { fetchSavedHistoryMeta, saveRunSnapshot, fetchSavedRun } from './savedRunsService.js'
+
+const MAX_SAVED_RUNS = 10
 
 /**
- * Owns a rolling localStorage history of completed runs: auto-saves once a
- * quick check or deep check finishes and exposes ways to restore the newest or
- * a specifically selected historical snapshot.
+ * Owns a rolling server-side (Postgres-backed) history of completed runs:
+ * auto-saves once a quick check or deep check finishes and exposes ways to
+ * restore the newest or a specifically selected historical snapshot. This
+ * is durable and shared across every browser/device hitting the deployment
+ * — unlike the in-memory signal cache, it is not meant to reset on restart.
  *
  * Auto-save arms when `checking`/`deepRunning` becomes true, then waits until
  * the corresponding completed state is visible. Keeping that pending state
@@ -23,7 +27,7 @@ import { readSavedHistoryMeta, saveSnapshot, loadSnapshot, clearSnapshot } from 
  * }} state
  */
 export function useSavedRun({ projects, deep, fileName, checking, deepRunning, quickDone, deepDone }) {
-  const [history, setHistory] = useState(() => readSavedHistoryMeta())
+  const [history, setHistory] = useState([])
   const [loadedAt, setLoadedAt] = useState(null)
   const savedMeta = history[0] ?? null
 
@@ -40,19 +44,49 @@ export function useSavedRun({ projects, deep, fileName, checking, deepRunning, q
     fileNameRef.current = fileName
   })
 
-  const saveRun = useCallback((checkType) => {
+  /** Re-fetches the history list from the server — other devices/browsers may have saved runs since the last fetch. */
+  const refreshHistory = useCallback(async () => {
+    try {
+      setHistory(await fetchSavedHistoryMeta())
+    } catch {
+      // Most likely no database is linked yet — history just stays empty.
+    }
+  }, [])
+
+  // Inlined rather than calling refreshHistory() directly, so the effect
+  // itself doesn't reference a function whose body sets state — the fetch
+  // is still async (the .then callback is what actually calls setHistory),
+  // this just keeps the effect's own body free of a direct setState call.
+  useEffect(() => {
+    let cancelled = false
+    fetchSavedHistoryMeta()
+      .then((data) => {
+        if (!cancelled) setHistory(data)
+      })
+      .catch(() => {
+        // Most likely no database is linked yet — history just stays empty.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const saveRun = useCallback(async (checkType) => {
     if (!projectsRef.current.length) return
     try {
-      const snapshot = saveSnapshot({
+      const saved = await saveRunSnapshot({
         fileName: fileNameRef.current,
         projects: projectsRef.current,
         deep: deepRef.current,
         checkType,
       })
-      setHistory(readSavedHistoryMeta())
-      setLoadedAt(snapshot.savedAt)
+      setHistory((prev) => [
+        { id: saved.id, savedAt: saved.savedAt, fileName: saved.fileName, count: saved.count, checkType: saved.checkType },
+        ...prev,
+      ].slice(0, MAX_SAVED_RUNS))
+      setLoadedAt(saved.savedAt)
     } catch {
-      /* localStorage full or unavailable — non-fatal */
+      /* Server unavailable or no database linked yet — non-fatal */
     }
   }, [])
 
@@ -74,17 +108,15 @@ export function useSavedRun({ projects, deep, fileName, checking, deepRunning, q
   }, [checking, deepRunning, quickDone, deepDone, saveRun])
 
   /**
-   * @returns {{status: 'empty'} | {status: 'error'} | {status: 'ok', saved: import('./savedRunsService.js').SavedRunSnapshot}}
+   * @returns {Promise<{status: 'empty'} | {status: 'error'} | {status: 'ok', saved: import('./savedRunsService.js').SavedRunSnapshot}>}
    */
-  const loadRun = useCallback((id = null) => {
+  const loadRun = useCallback(async (id = null) => {
     try {
-      const saved = loadSnapshot(id)
+      const saved = await fetchSavedRun(id)
       if (!saved) return { status: 'empty' }
       setLoadedAt(saved.savedAt)
       return { status: 'ok', saved }
     } catch {
-      clearSnapshot()
-      setHistory([])
       return { status: 'error' }
     }
   }, [])
@@ -97,5 +129,5 @@ export function useSavedRun({ projects, deep, fileName, checking, deepRunning, q
     setLoadedAt(null)
   }, [])
 
-  return { history, savedMeta, loadedAt, loadRun, loadLastRun, clearLoadedAt }
+  return { history, savedMeta, loadedAt, loadRun, loadLastRun, clearLoadedAt, refreshHistory }
 }

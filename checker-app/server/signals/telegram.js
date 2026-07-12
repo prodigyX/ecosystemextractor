@@ -34,14 +34,16 @@ export async function checkTelegram(project, ctx) {
     const latest = new Date(Math.max(...times))
     facts.telegramLastPost = latest.toISOString()
     const age = daysAgo(latest)
+    // Telegram is a secondary/community signal, weighted below the primary
+    // website and X liveness signals.
     if (age <= TELEGRAM_MESSAGE_AGE_DAYS.active) {
-      evidence.push(ev('good', `Telegram active (≤${TELEGRAM_MESSAGE_AGE_DAYS.active}d)`, `@${handle} · ${fmtDate(latest)}`, 8))
+      evidence.push(ev('good', `Telegram active (≤${TELEGRAM_MESSAGE_AGE_DAYS.active}d)`, `@${handle} · ${fmtDate(latest)}`, 5))
     } else if (age <= TELEGRAM_MESSAGE_AGE_DAYS.recent) {
-      evidence.push(ev('good', `Telegram recent (≤${TELEGRAM_MESSAGE_AGE_DAYS.recent}d)`, `@${handle} · ${fmtDate(latest)}`, 4))
+      evidence.push(ev('good', `Telegram recent (≤${TELEGRAM_MESSAGE_AGE_DAYS.recent}d)`, `@${handle} · ${fmtDate(latest)}`, 3))
     } else if (age <= TELEGRAM_MESSAGE_AGE_DAYS.inactive) {
-      evidence.push(ev('warn', `Telegram quiet (≤${TELEGRAM_MESSAGE_AGE_DAYS.inactive}d)`, `@${handle} · ${fmtDate(latest)}`, -3))
+      evidence.push(ev('warn', `Telegram quiet (≤${TELEGRAM_MESSAGE_AGE_DAYS.inactive}d)`, `@${handle} · ${fmtDate(latest)}`, -2))
     } else {
-      evidence.push(ev('warn', `Telegram dead (>${TELEGRAM_MESSAGE_AGE_DAYS.inactive}d)`, `@${handle} · ${fmtDate(latest)}`, -8))
+      evidence.push(ev('warn', `Telegram dead (>${TELEGRAM_MESSAGE_AGE_DAYS.inactive}d)`, `@${handle} · ${fmtDate(latest)}`, -5))
     }
   } catch (err) {
     evidence.push(ev('info', 'Telegram check failed', err.message, 0))

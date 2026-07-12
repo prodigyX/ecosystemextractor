@@ -48,14 +48,14 @@ export function isSameOrigin(req) {
   }
 }
 
-export async function readJsonBody(req) {
+export async function readJsonBody(req, limit = MAX_BODY_BYTES) {
   if (req.body && typeof req.body === 'object') return req.body
   if (typeof req.body === 'string') return JSON.parse(req.body)
 
   let data = ''
   for await (const chunk of req) {
     data += chunk
-    if (data.length > MAX_BODY_BYTES) throw new Error('Request body too large')
+    if (data.length > limit) throw new Error('Request body too large')
   }
   return JSON.parse(data)
 }
@@ -64,4 +64,29 @@ export function sendJson(res, status, value) {
   res.statusCode = status
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
   res.end(JSON.stringify(value))
+}
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/** Validate before it ever reaches a query — a malformed id would otherwise surface a raw Postgres type-cast error to the client. */
+export function isValidUuid(value) {
+  return typeof value === 'string' && UUID_PATTERN.test(value)
+}
+
+/** Best-effort client IP for rate-limiting purposes — trusts the platform-set header, not meaningful outside Vercel/a reverse proxy that sets it. */
+export function getClientIp(req) {
+  const forwarded = req.headers['x-forwarded-for']
+  const first = Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(',')[0]
+  return first?.trim() || req.socket?.remoteAddress || 'unknown'
+}
+
+/**
+ * Sends a safe 500: never echoes a raw internal error message (DB
+ * connection strings, query fragments, stack details) back to the client.
+ * Known/expected validation failures should be sent with sendJson(res, 400,
+ * {error}) directly using their own specific message instead of this.
+ */
+export function sendSafeServerError(res, error, publicMessage) {
+  console.error(publicMessage, error)
+  sendJson(res, 500, { error: publicMessage })
 }

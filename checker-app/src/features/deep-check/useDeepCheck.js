@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
-import { runDeepCheckStream } from './deepCheckService.js'
+import { clearServerCache, runDeepCheckStream } from './deepCheckService.js'
 
 // Must match the number of signal checks run per project in server/pipeline.js
 // (website, dns-ssl, domain, defillama, x, content, sitemap, github, discord, telegram).
@@ -29,6 +29,8 @@ export function useDeepCheck(projects, setProjects, { onStart, onError } = {}) {
   const [signalProgress, setSignalProgress] = useState({}) // projectId -> completed signal count
   const [activityLog, setActivityLog] = useState([]) // newest first
   const [startedAt, setStartedAt] = useState(null)
+  const [completedAt, setCompletedAt] = useState(null)
+  const [clearingCache, setClearingCache] = useState(false)
   const projectNamesRef = useRef({})
 
   const startDeepCheck = useCallback(async () => {
@@ -113,6 +115,7 @@ export function useDeepCheck(projects, setProjects, { onStart, onError } = {}) {
       onError?.(`Deep check failed: ${err.message}`)
     } finally {
       setDeepRunning(false)
+      setCompletedAt(Date.now())
     }
   }, [deepRunning, projects, setProjects, onStart, onError])
 
@@ -123,6 +126,24 @@ export function useDeepCheck(projects, setProjects, { onStart, onError } = {}) {
     setStartedAt(null)
   }, [])
 
+  /**
+   * Clears the server's in-memory signal cache. Returns true on success,
+   * false on failure (with the error surfaced via `onError`) — callers use
+   * the return value to decide whether to close a confirmation dialog.
+   */
+  const clearCache = useCallback(async () => {
+    setClearingCache(true)
+    try {
+      await clearServerCache()
+      return true
+    } catch (err) {
+      onError?.(`Could not clear the cache: ${err.message}`)
+      return false
+    } finally {
+      setClearingCache(false)
+    }
+  }, [onError])
+
   return {
     deep,
     setDeep,
@@ -131,8 +152,11 @@ export function useDeepCheck(projects, setProjects, { onStart, onError } = {}) {
     signalProgress,
     activityLog,
     startedAt,
+    completedAt,
+    clearingCache,
     totalSignals: TOTAL_SIGNALS,
     startDeepCheck,
     reset,
+    clearCache,
   }
 }

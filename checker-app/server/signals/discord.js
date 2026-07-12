@@ -25,20 +25,28 @@ export async function checkDiscord(project, ctx) {
         ? `${members.toLocaleString()} members${online ? `, ${online.toLocaleString()} online` : ''}`
         : data.guild?.name
 
+      // Discord is a secondary/community signal, weighted below the primary
+      // website and X liveness signals — see server/signals/http.js and
+      // server/signals/x.js.
       if (members == null) {
-        evidence.push(ev('good', 'Discord invite valid', detail, 3))
+        evidence.push(ev('good', 'Discord invite valid', detail, 2))
       } else if (members >= 5000) {
-        evidence.push(ev('good', 'Discord community large (5K+)', detail, 10))
+        evidence.push(ev('good', 'Discord community large (5K+)', detail, 6))
       } else if (members >= 3000) {
-        evidence.push(ev('good', 'Discord community healthy (3K+)', detail, 7))
+        evidence.push(ev('good', 'Discord community healthy (3K+)', detail, 5))
       } else if (members >= 500) {
-        evidence.push(ev('good', 'Discord community small', detail, 3))
+        evidence.push(ev('good', 'Discord community small', detail, 2))
       } else {
-        evidence.push(ev('warn', 'Discord community tiny (<500)', detail, -2))
+        evidence.push(ev('warn', 'Discord community tiny (<500)', detail, -1))
       }
     } else if (res.status === 404 || res.status === 410) {
       facts.discordValid = false
-      evidence.push(ev('warn', 'Discord invite expired/invalid', link, -6))
+      evidence.push(ev('warn', 'Discord invite expired/invalid', link, -4))
+    } else {
+      // A non-2xx/404/410 response (e.g. a transient 5xx or unexpected
+      // status) tells us nothing conclusive about the invite — report it as
+      // uncertain rather than silently producing no evidence at all.
+      evidence.push(ev('info', 'Discord check inconclusive', `HTTP ${res.status}`, 0))
     }
   } catch (err) {
     evidence.push(ev('info', 'Discord check failed', err.message, 0))

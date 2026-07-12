@@ -2,6 +2,9 @@ import { useCallback, useRef, useState } from 'react'
 import { Header } from '../shared/components/Header.jsx'
 import { Dropzone } from '../shared/components/Dropzone.jsx'
 import { CheckModePrompt } from '../shared/components/CheckModePrompt.jsx'
+import { RateLimitFooter } from '../shared/components/RateLimitFooter.jsx'
+import { ConfirmModal } from '../shared/components/ConfirmModal.jsx'
+import { FetchOverlay } from '../shared/components/FetchOverlay.jsx'
 import { computeVerdictCounts, computeQuickCounts } from '../shared/domain/scoring.js'
 import { useProjects } from '../features/project-source/useProjects.js'
 import { useQuickCheck } from '../features/quick-check/useQuickCheck.js'
@@ -9,13 +12,17 @@ import { useDeepCheck } from '../features/deep-check/useDeepCheck.js'
 import { BatchProgressBar } from '../features/deep-check/BatchProgressBar.jsx'
 import { ActivityModal } from '../features/deep-check/ActivityModal.jsx'
 import { SearchAndFilters } from '../features/search-filters/SearchAndFilters.jsx'
-import { filterProjects, computeStatusCounts } from '../features/search-filters/filters.js'
+import { filterProjects, sortProjects, computeStatusCounts } from '../features/search-filters/filters.js'
 import { ResultsTable } from '../features/results-table/ResultsTable.jsx'
 import { SummaryCards } from '../features/results-table/SummaryCards.jsx'
 import { ProjectDetailModal } from '../features/project-detail/ProjectDetailModal.jsx'
 import { useSavedRun } from '../features/saved-runs/useSavedRun.js'
+import { HistoryModal } from '../features/saved-runs/HistoryModal.jsx'
 import { useFavorites } from '../features/favorites/useFavorites.js'
 import { downloadCsv } from '../services/csvExportService.js'
+import { downloadJson } from '../services/jsonExportService.js'
+
+const DEFAULT_SORT = { key: 'project', direction: 'asc' }
 
 /**
  * The single dashboard page: wires together every feature's hooks and
@@ -29,8 +36,11 @@ export function DashboardPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [verdictFilter, setVerdictFilter] = useState(new Set())
+  const [sort, setSort] = useState(DEFAULT_SORT)
   const [selectedProjectId, setSelectedProjectId] = useState(null)
   const [activityModalOpen, setActivityModalOpen] = useState(false)
+  const [clearCacheModalOpen, setClearCacheModalOpen] = useState(false)
+  const [historyModalOpen, setHistoryModalOpen] = useState(false)
 
   const projectsState = useProjects()
   const quick = useQuickCheck(projectsState.projects, projectsState.setProjects)
@@ -66,6 +76,7 @@ export function DashboardPage() {
     setSearch('')
     setStatusFilter('all')
     setVerdictFilter(new Set())
+    setSort(DEFAULT_SORT)
     setSelectedProjectId(null)
     savedRun.clearLoadedAt()
   }
@@ -85,6 +96,14 @@ export function DashboardPage() {
       if (next.has(key)) next.delete(key)
       else next.add(key)
       return next
+    })
+  }, [])
+
+  const toggleSort = useCallback((key) => {
+    setSort((prev) => {
+      if (prev?.key !== key) return { key, direction: 'asc' }
+      if (prev.direction === 'asc') return { key, direction: 'desc' }
+      return DEFAULT_SORT
     })
   }, [])
 
@@ -108,6 +127,33 @@ export function DashboardPage() {
     projectsState.fetchFromBerachain(resetForNewLoad)
   }
 
+  // Reuses the newest saved run's project list without a live Berachain
+  // fetch — deliberately does NOT restore its old `deep` results, so the
+  // check-mode prompt appears fresh (unlike handleLoadRun / "Restore last
+  // run", which is for reviewing past results, not starting a new check).
+  const handleUseLastProjectList = async () => {
+    if (busy) return
+    const result = await savedRun.loadRun()
+    if (result.status === 'error') {
+      projectsState.setParseError('Could not load saved history — the server may be unavailable.')
+      return
+    }
+    if (result.status === 'empty') {
+      projectsState.setParseError('No saved runs yet — fetch from Berachain or upload a JSON file first.')
+      return
+    }
+    const { saved } = result
+    resetForNewLoad()
+    projectsState.setProjects(saved.projects)
+    projectsState.setFileName(saved.fileName ? `${saved.fileName} (reused list)` : 'Reused project list')
+    projectsState.setParseError(null)
+  }
+
+  const handleConfirmClearCache = async () => {
+    const ok = await deepCheck.clearCache()
+    if (ok) setClearCacheModalOpen(false)
+  }
+
   const handleStartCheck = () => {
     if (deepCheck.deepRunning) return
     quick.startCheck()
@@ -118,10 +164,10 @@ export function DashboardPage() {
     deepCheck.startDeepCheck()
   }
 
-  const handleLoadRun = (id = null) => {
-    const result = savedRun.loadRun(id)
+  const handleLoadRun = async (id = null) => {
+    const result = await savedRun.loadRun(id)
     if (result.status === 'error') {
-      projectsState.setParseError('Saved history is corrupted — could not load it.')
+      projectsState.setParseError('Could not load saved history — the server may be unavailable.')
       return
     }
     if (result.status === 'empty') return
@@ -139,6 +185,16 @@ export function DashboardPage() {
   }
 
   const handleLoadLastRun = () => handleLoadRun()
+
+  const handleSelectHistory = async (id) => {
+    await handleLoadRun(id)
+    setHistoryModalOpen(false)
+  }
+
+  const handleOpenHistory = () => {
+    savedRun.refreshHistory()
+    setHistoryModalOpen(true)
+  }
 
   const handleRunNewCheck = () => {
     if (busy) return
@@ -163,6 +219,7 @@ export function DashboardPage() {
     statusFilter,
     verdictFilter,
   })
+  const sortedProjects = sortProjects(filteredProjects, deepCheck.deep, sort)
 
   const selectedProject = selectedProjectId
     ? projectsState.projects.find((p) => p.id === selectedProjectId)
@@ -179,15 +236,22 @@ export function DashboardPage() {
         progress={quick.progress}
         deepProgress={deepCheck.deepProgress}
         savedMeta={savedRun.savedMeta}
+        historyCount={savedRun.history.length}
         onLoadLastRun={handleLoadLastRun}
+        onOpenHistory={handleOpenHistory}
         onFetchFromBerachain={handleFetchFromBerachain}
+        onUseLastProjectList={handleUseLastProjectList}
         fileInputRef={fileInputRef}
         onFileInput={onFileInput}
         onRunNewCheck={handleRunNewCheck}
         onDownloadCsv={() => downloadCsv(projectsState.projects, deepCheck.deep)}
+        onDownloadJson={() => downloadJson(projectsState.projects, deepCheck.deep)}
+        onClearCache={() => setClearCacheModalOpen(true)}
         hasCheckResults={hasCheckResults}
         busy={busy}
       />
+
+      {projectsState.projects.length > 0 && projectsState.fetching && <FetchOverlay />}
 
       {projectsState.projects.length === 0 ? (
         <Dropzone
@@ -196,6 +260,7 @@ export function DashboardPage() {
           onDrop={onDrop}
           onBrowseClick={() => fileInputRef.current?.click()}
           onFetchFromBerachain={handleFetchFromBerachain}
+          onUseLastProjectList={handleUseLastProjectList}
           history={savedRun.history}
           onLoadHistory={handleLoadRun}
         />
@@ -227,12 +292,14 @@ export function DashboardPage() {
           />
 
           <ResultsTable
-            projects={filteredProjects}
+            projects={sortedProjects}
             deep={deepCheck.deep}
             expanded={expanded}
             onToggleExpand={toggleExpand}
             selectedProjectId={selectedProjectId}
             onOpenDetail={setSelectedProjectId}
+            sort={sort}
+            onSort={toggleSort}
           />
         </>
       )}
@@ -263,6 +330,27 @@ export function DashboardPage() {
       {activityModalOpen && (
         <ActivityModal log={deepCheck.activityLog} onClose={() => setActivityModalOpen(false)} />
       )}
+
+      {clearCacheModalOpen && (
+        <ConfirmModal
+          title="Clear check cache?"
+          message="This wipes cached X, GitHub, and content-baseline results on the server, so the next check re-fetches everything from scratch instead of reusing recent data. This can't be undone."
+          confirmLabel="Clear cache"
+          confirming={deepCheck.clearingCache}
+          onConfirm={handleConfirmClearCache}
+          onCancel={() => setClearCacheModalOpen(false)}
+        />
+      )}
+
+      {historyModalOpen && (
+        <HistoryModal
+          history={savedRun.history}
+          onSelect={handleSelectHistory}
+          onClose={() => setHistoryModalOpen(false)}
+        />
+      )}
+
+      <RateLimitFooter refreshToken={deepCheck.completedAt} />
     </div>
   )
 }

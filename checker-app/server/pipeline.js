@@ -8,9 +8,10 @@ import { checkDiscord } from './signals/discord.js'
 import { checkTelegram } from './signals/telegram.js'
 import { checkDefillama } from './signals/defillama.js'
 import { checkX, xHandleFromUrl } from './signals/x.js'
-import { domainOf, ev, daysAgo } from './util.js'
-import { SCORE_WEIGHTS, TELEGRAM_MESSAGE_AGE_DAYS } from './config.js'
+import { domainOf, ev, daysAgo, fmtDateTime } from './util.js'
+import { SCORE_WEIGHTS, TELEGRAM_MESSAGE_AGE_DAYS, DOM_SCRAPE_REFETCH_MS, DOM_SCRAPE_REFETCH_DAYS } from './config.js'
 import { scrapeRenderedLinks } from './domScrape.js'
+import { getDomScrapeFallback, saveDomScrapeFallback } from './domScrapeFallback.js'
 
 const PROJECT_CONCURRENCY = 4
 const MAX_HISTORY_ENTRIES = 10
@@ -141,10 +142,49 @@ async function checkProject(project, shared, emit) {
   // never see into (see server/domScrape.js). Only pays for a real browser
   // render when it's actually needed, and never overwrites a link the
   // cheaper sources already found.
-  if (ctx.html && ctx.launchBrowser && (!ctx.links.discord || !ctx.links.telegram)) {
-    const rendered = await scrapeRenderedLinks(ctx.finalUrl || project.website, ctx.launchBrowser)
-    if (!ctx.links.discord && rendered.discord) ctx.links.discord = rendered.discord
-    if (!ctx.links.telegram && rendered.telegram) ctx.links.telegram = rendered.telegram
+  //
+  // A real Chromium launch+render is far more expensive (and a timeout risk
+  // on constrained environments) than any of the other sources above, so
+  // the attempt itself — found something or not — is cached durably per URL
+  // (server/domScrapeFallback.js) and reused for DOM_SCRAPE_REFETCH_DAYS
+  // instead of relaunching a browser on every single check.
+  const scrapeUrl = ctx.finalUrl || project.website
+  if (ctx.html && scrapeUrl && (!ctx.links.discord || !ctx.links.telegram)) {
+    const domFallback = await getDomScrapeFallback(scrapeUrl)
+    const domFallbackAgeMs = domFallback?.fetchedAt ? Date.now() - new Date(domFallback.fetchedAt).getTime() : Infinity
+    const domFallbackIsFresh = Boolean(domFallback?.result) && domFallbackAgeMs < DOM_SCRAPE_REFETCH_MS
+
+    let rendered = null
+    let renderedAt = null
+    if (domFallbackIsFresh) {
+      rendered = domFallback.result
+      renderedAt = domFallback.fetchedAt
+    } else if (ctx.launchBrowser) {
+      rendered = await scrapeRenderedLinks(scrapeUrl, ctx.launchBrowser)
+      renderedAt = new Date().toISOString()
+      await saveDomScrapeFallback(scrapeUrl, rendered)
+    }
+
+    if (rendered) {
+      if (!ctx.links.discord && rendered.discord) ctx.links.discord = rendered.discord
+      if (!ctx.links.telegram && rendered.telegram) ctx.links.telegram = rendered.telegram
+      const renderedAtMs = new Date(renderedAt).getTime()
+      collect({
+        name: 'telegram',
+        facts: {},
+        evidence: [
+          {
+            ...ev(
+              'info',
+              'Rendered-page scan (Discord/Telegram)',
+              `${domFallbackIsFresh ? 'cached · ' : ''}last scanned ${fmtDateTime(renderedAtMs)} · next scan due ${fmtDateTime(renderedAtMs + DOM_SCRAPE_REFETCH_MS)} (every ${DOM_SCRAPE_REFETCH_DAYS}d)`,
+              0
+            ),
+            signal: 'telegram',
+          },
+        ],
+      })
+    }
   }
 
   // Cross-signal: having just one of Discord/Telegram is normal and isn't

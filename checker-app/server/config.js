@@ -36,6 +36,16 @@ export const X_FALLBACK_REFETCH_MS = X_FALLBACK_REFETCH_DAYS * 24 * 60 * 60 * 10
 export const GITHUB_FALLBACK_REFETCH_DAYS = 1
 export const GITHUB_FALLBACK_REFETCH_MS = GITHUB_FALLBACK_REFETCH_DAYS * 24 * 60 * 60 * 1000
 
+// Same durable-fallback pattern again for the headless-browser DOM scan
+// (server/domScrape.js, server/domScrapeFallback.js) — a real Chromium
+// launch+render is far more expensive than any of the above, and slow or
+// resource-constrained environments (e.g. Vercel's free tier) make it a
+// timeout risk on top of that. Once a URL has been rendered and scanned —
+// whether or not it actually found a Discord/Telegram link — that attempt
+// is reused for this long instead of relaunching a browser on every check.
+export const DOM_SCRAPE_REFETCH_DAYS = 14
+export const DOM_SCRAPE_REFETCH_MS = DOM_SCRAPE_REFETCH_DAYS * 24 * 60 * 60 * 1000
+
 export const X_RESULT_CACHE_ENABLED = true
 export const GITHUB_RESULT_CACHE_ENABLED = true
 

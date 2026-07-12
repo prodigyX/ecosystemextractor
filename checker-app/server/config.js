@@ -21,7 +21,7 @@ export const SIGNAL_FRESH_FETCH_MS = SIGNAL_FRESH_FETCH_DAYS * 24 * 60 * 60 * 10
 // limits via repeated clear-then-recheck cycles. Only overwritten when a
 // live fetch actually produces a usable result (never with a lesser/empty
 // one), and only consulted once the regular cache above is stale/cleared.
-export const X_FALLBACK_REFETCH_DAYS = 7
+export const X_FALLBACK_REFETCH_DAYS = 30
 export const X_FALLBACK_REFETCH_MS = X_FALLBACK_REFETCH_DAYS * 24 * 60 * 60 * 1000
 
 // Same durable-fallback pattern for GitHub (server/githubFallback.js), but

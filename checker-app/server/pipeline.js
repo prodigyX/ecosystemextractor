@@ -64,10 +64,8 @@ async function checkProject(project, shared, emit) {
     env: shared.env,
     store: shared.store,
     storeKey: domainOf(project.website) || project.name,
-    getBrowser: shared.getBrowser,
     xState: shared.xState,
     xTimelineQueue: shared.xTimelineQueue,
-    xBrowserQueue: shared.xBrowserQueue,
     html: null,
     finalUrl: null,
     links: {},
@@ -163,27 +161,13 @@ function makeQueue(concurrency) {
  * Runs the full deep-check pipeline over all projects.
  * emit(event) is called with NDJSON-able progress events.
  */
-export async function runPipeline(projects, { env, store, launchBrowser }, emit) {
-  let browserPromise = null
-  const getBrowser = () => {
-    if (!browserPromise) {
-      browserPromise = launchBrowser().catch((err) => {
-        console.error('[pipeline] browser launch failed:', err.message)
-        return null
-      })
-    }
-    return browserPromise
-  }
-
-  // Profile lookups can run with the normal project concurrency. Only timeline
-  // syndication is serialized/paced; logged-out browser fallbacks are also
-  // bounded so a throttled batch does not open many X tabs at once.
+export async function runPipeline(projects, { env, store }, emit) {
+  // Profile lookups can run with the normal project concurrency. Only
+  // timeline syndication is serialized/paced.
   const shared = {
     env,
     store,
-    getBrowser,
     xTimelineQueue: makeQueue(1),
-    xBrowserQueue: makeQueue(2),
     xState: { syndicationBlocked: false },
   }
   const projectQueue = makeQueue(PROJECT_CONCURRENCY)
@@ -211,9 +195,5 @@ export async function runPipeline(projects, { env, store, launchBrowser }, emit)
     )
   )
 
-  if (browserPromise) {
-    const browser = await browserPromise
-    await browser?.close().catch(() => {})
-  }
   emit({ type: 'done' })
 }

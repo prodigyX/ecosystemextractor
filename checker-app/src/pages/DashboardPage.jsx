@@ -41,6 +41,10 @@ export function DashboardPage() {
   const [activityModalOpen, setActivityModalOpen] = useState(false)
   const [clearCacheModalOpen, setClearCacheModalOpen] = useState(false)
   const [historyModalOpen, setHistoryModalOpen] = useState(false)
+  // The id of the saved run currently being fetched from the server, or the
+  // '__latest__' sentinel for "Restore last run" (which has no id client-side
+  // until the server resolves it) — null when nothing is loading.
+  const [loadingRunId, setLoadingRunId] = useState(null)
 
   const projectsState = useProjects()
   const quick = useQuickCheck(projectsState.projects, projectsState.setProjects)
@@ -120,7 +124,7 @@ export function DashboardPage() {
     projectsState.handleFile(e.dataTransfer.files[0], resetForNewLoad)
   }
 
-  const busy = quick.checking || deepCheck.deepRunning || projectsState.fetching
+  const busy = quick.checking || deepCheck.deepRunning || projectsState.fetching || loadingRunId != null
 
   const handleFetchFromBerachain = () => {
     if (busy) return
@@ -155,7 +159,19 @@ export function DashboardPage() {
 
   const handleConfirmClearCache = async () => {
     const ok = await deepCheck.clearCache()
-    if (ok) setClearCacheModalOpen(false)
+    if (ok) {
+      setClearCacheModalOpen(false)
+      // Cached check data AND saved run history are both gone server-side
+      // now — send the user back to the first-page data-source picker
+      // rather than showing a table/history list that no longer matches
+      // what the server actually knows, and refresh the (now-empty) history
+      // list so "Restore last run"/"Select from history" stop appearing.
+      resetForNewLoad()
+      projectsState.setProjects([])
+      projectsState.setFileName(null)
+      projectsState.setParseError(null)
+      savedRun.refreshHistory()
+    }
   }
 
   const handleStartCheck = () => {
@@ -188,10 +204,22 @@ export function DashboardPage() {
     setSelectedProjectId(null)
   }
 
-  const handleLoadLastRun = () => handleLoadRun()
+  const handleLoadLastRun = async () => {
+    setLoadingRunId('__latest__')
+    try {
+      await handleLoadRun()
+    } finally {
+      setLoadingRunId(null)
+    }
+  }
 
   const handleSelectHistory = async (id) => {
-    await handleLoadRun(id)
+    setLoadingRunId(id)
+    try {
+      await handleLoadRun(id)
+    } finally {
+      setLoadingRunId(null)
+    }
     setHistoryModalOpen(false)
   }
 
@@ -256,6 +284,9 @@ export function DashboardPage() {
       />
 
       {projectsState.projects.length > 0 && projectsState.fetching && <FetchOverlay />}
+      {loadingRunId === '__latest__' && (
+        <FetchOverlay title="Restoring last run…" description="Loading the saved snapshot from the server." />
+      )}
 
       {projectsState.projects.length === 0 ? (
         <Dropzone
@@ -266,7 +297,8 @@ export function DashboardPage() {
           onFetchFromBerachain={handleFetchFromBerachain}
           onUseLastProjectList={handleUseLastProjectList}
           history={savedRun.history}
-          onLoadHistory={handleLoadRun}
+          onLoadHistory={handleSelectHistory}
+          loadingHistoryId={loadingRunId}
         />
       ) : (
         <>
@@ -338,7 +370,7 @@ export function DashboardPage() {
       {clearCacheModalOpen && (
         <ConfirmModal
           title="Clear check cache?"
-          message="This wipes cached X, GitHub, and content-baseline results on the server, so the next check re-fetches everything from scratch instead of reusing recent data. This can't be undone."
+          message="This wipes cached X, GitHub, and content-baseline results on the server, so the next check re-fetches everything from scratch — and also permanently deletes all saved run history (Restore last run / Select from history). This can't be undone."
           confirmLabel="Clear cache"
           confirming={deepCheck.clearingCache}
           onConfirm={handleConfirmClearCache}
@@ -349,6 +381,7 @@ export function DashboardPage() {
       {historyModalOpen && (
         <HistoryModal
           history={savedRun.history}
+          loadingId={loadingRunId}
           onSelect={handleSelectHistory}
           onClose={() => setHistoryModalOpen(false)}
         />

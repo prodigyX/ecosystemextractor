@@ -108,3 +108,9 @@ export async function saveSnapshot(sql, { fileName, projects, deep, checkType })
   `
   return { id, savedAt, fileName, checkType, count: projects.length }
 }
+
+/** Wipes every saved run. Bundled into "Clear check cache" — see api/clear-cache.js. */
+export async function clearAllSavedRuns(sql) {
+  await ensureSchema(sql)
+  await sql`DELETE FROM saved_runs`
+}

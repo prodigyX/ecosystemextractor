@@ -15,6 +15,7 @@ import { fmtSavedAt } from '../lib/formatters.js'
  *   onUseLastProjectList: () => void,
  *   history: import('../../features/saved-runs/savedRunsService.js').SavedRunMeta[],
  *   onLoadHistory: (id: string) => void,
+ *   loadingHistoryId: string|null,
  * }} props
  */
 export function Dropzone({
@@ -26,7 +27,9 @@ export function Dropzone({
   onUseLastProjectList,
   history,
   onLoadHistory,
+  loadingHistoryId,
 }) {
+  const historyBusy = loadingHistoryId != null
   const [historyOpen, setHistoryOpen] = useState(false)
 
   return (
@@ -48,7 +51,7 @@ export function Dropzone({
           type="button"
           className="source-option source-option-fetch"
           onClick={onFetchFromBerachain}
-          disabled={fetching}
+          disabled={fetching || historyBusy}
         >
           <span className="source-option-icon" aria-hidden="true">
             {fetching ? <span className="spinner-ring" /> : '◎'}
@@ -71,7 +74,7 @@ export function Dropzone({
             type="button"
             className="source-option source-option-reuse"
             onClick={onUseLastProjectList}
-            disabled={fetching}
+            disabled={fetching || historyBusy}
           >
             <span className="source-option-icon" aria-hidden="true">⚡</span>
             <span className="source-option-copy">
@@ -88,7 +91,7 @@ export function Dropzone({
           type="button"
           className="source-option source-option-upload"
           onClick={onBrowseClick}
-          disabled={fetching}
+          disabled={fetching || historyBusy}
         >
           <span className="source-option-icon" aria-hidden="true">↑</span>
           <span className="source-option-copy">
@@ -105,7 +108,7 @@ export function Dropzone({
             type="button"
             className="source-option source-option-history"
             onClick={() => setHistoryOpen((open) => !open)}
-            disabled={fetching}
+            disabled={fetching || historyBusy}
             aria-expanded={historyOpen}
             aria-controls="saved-run-history"
           >
@@ -131,18 +134,33 @@ export function Dropzone({
             <span>Newest first · up to 10</span>
           </div>
           <div className="history-run-list">
-            {history.map((run) => (
-              <button key={run.id} type="button" onClick={() => onLoadHistory(run.id)}>
-                <span className={`history-run-type history-run-${run.checkType}`} aria-hidden="true">
-                  {run.checkType === 'deep' ? '◇' : '⚡'}
-                </span>
-                <span className="history-run-copy">
-                  <strong>{run.fileName || 'Saved ecosystem run'}</strong>
-                  <small>{run.count} projects · {run.checkType === 'deep' ? 'Deep Check' : 'Quick Check'}</small>
-                </span>
-                <time dateTime={run.savedAt}>{fmtSavedAt(run.savedAt)}</time>
-              </button>
-            ))}
+            {history.map((run) => {
+              const isLoading = run.id === loadingHistoryId
+              return (
+                <button
+                  key={run.id}
+                  type="button"
+                  onClick={() => onLoadHistory(run.id)}
+                  disabled={historyBusy}
+                  aria-busy={isLoading}
+                >
+                  {isLoading ? (
+                    <span className="spinner-ring" aria-hidden="true" />
+                  ) : (
+                    <span className={`history-run-type history-run-${run.checkType}`} aria-hidden="true">
+                      {run.checkType === 'deep' ? '◇' : '⚡'}
+                    </span>
+                  )}
+                  <span className="history-run-copy">
+                    <strong>{run.fileName || 'Saved ecosystem run'}</strong>
+                    <small>
+                      {isLoading ? 'Loading…' : `${run.count} projects · ${run.checkType === 'deep' ? 'Deep Check' : 'Quick Check'}`}
+                    </small>
+                  </span>
+                  <time dateTime={run.savedAt}>{fmtSavedAt(run.savedAt)}</time>
+                </button>
+              )
+            })}
           </div>
         </div>
       )}

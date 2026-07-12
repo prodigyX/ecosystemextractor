@@ -172,7 +172,7 @@ export function Header({
                 disabled={busy}
               >
                 <span aria-hidden="true">⟲</span>
-                <span><strong>Clear check cache</strong><small>Forces fresh X/GitHub lookups next run</small></span>
+                <span><strong>Clear check cache</strong><small>Fresh X/GitHub lookups + deletes saved run history</small></span>
               </button>
             </div>
           </details>

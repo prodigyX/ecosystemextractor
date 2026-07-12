@@ -9,7 +9,7 @@ import { loadEnv } from './server/util.js'
 import { BERACHAIN_DIRECTORY_URL } from './server/config.js'
 import { getRateLimitSnapshot, refreshGithubRateLimit } from './server/rateLimitStatus.js'
 import { getSql } from './server/db.js'
-import { listSavedRunsMeta, getSavedRun, saveSnapshot } from './server/savedRuns.js'
+import { listSavedRunsMeta, getSavedRun, saveSnapshot, clearAllSavedRuns } from './server/savedRuns.js'
 import { isValidUuid, getClientIp } from './server/api-helpers.js'
 import { isRateLimited } from './server/rateLimiter.js'
 
@@ -272,7 +272,7 @@ function berachainExtractPlugin() {
           const store = createStore()
           const emit = (event) => res.write(JSON.stringify(event) + '\n')
 
-          await runPipeline(projects, { env, store, launchBrowser }, emit)
+          await runPipeline(projects, { env, store }, emit)
           res.end()
         } catch (err) {
           if (!res.headersSent) {
@@ -299,7 +299,7 @@ function berachainExtractPlugin() {
         res.end(JSON.stringify(await getRateLimitSnapshot()))
       })
 
-      // ── Clear cache: wipes the Postgres-backed store without restarting ──
+      // ── Clear cache: wipes the Postgres-backed store + saved runs, no restart needed ──
       server.middlewares.use('/api/clear-cache', async (req, res) => {
         if (req.method !== 'POST') {
           res.statusCode = 405
@@ -313,6 +313,9 @@ function berachainExtractPlugin() {
           return
         }
         await createStore().clear()
+        const env = loadEnv(__dirname)
+        const sql = getSql(env)
+        if (sql) await clearAllSavedRuns(sql)
         res.setHeader('Content-Type', 'application/json')
         res.end(JSON.stringify({ cleared: true }))
       })

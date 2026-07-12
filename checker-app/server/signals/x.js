@@ -181,86 +181,6 @@ async function viaSyndication(handle, xState) {
   }
 }
 
-/** Puppeteer logged-out profile scrape (best effort). */
-async function viaPuppeteer(handle, getBrowser) {
-  const browser = await getBrowser()
-  if (!browser) {
-    return { result: null, attempt: attempt('puppeteer', 'browser-unavailable') }
-  }
-  const page = await browser.newPage()
-  try {
-    await page.setUserAgent(
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
-    )
-    await page.goto(`https://x.com/${handle}`, { waitUntil: 'domcontentloaded', timeout: 20000 })
-    await new Promise((resolve) => setTimeout(resolve, 4500))
-
-    const result = await page.evaluate((h) => {
-      const body = document.body.innerText
-      if (/this account doesn.t exist/i.test(body)) return { exists: false, suspended: false }
-      if (/account suspended/i.test(body)) return { exists: false, suspended: true }
-
-      const profileRendered =
-        document.querySelector('[data-testid="UserName"]') !== null ||
-        new RegExp(`@${h}\\b`, 'i').test(body)
-      if (!profileRendered) return null
-
-      const dates = [...document.querySelectorAll('time')]
-        .map((time) => time.getAttribute('datetime'))
-        .filter(Boolean)
-        .map((date) => new Date(date).getTime())
-        .filter((time) => !Number.isNaN(time) && time <= Date.now())
-
-      // X sometimes serves a stripped page with no data-testid/<time> markup
-      // at all, even though the tweets themselves are in the DOM. Each own
-      // post's /status/{id} link carries a Snowflake ID, which encodes its
-      // creation time directly (id >> 22) + the Twitter epoch, so the date
-      // can be recovered without relying on any rendered timestamp element.
-      // Only links under this handle's own path count, so a repost of
-      // someone else's newer tweet can't be mistaken for this account's post.
-      const TWITTER_EPOCH = 1288834974657n
-      const ownStatusPattern = new RegExp(`^/${h}/status/(\\d+)`, 'i')
-      for (const a of document.querySelectorAll('a[href*="/status/"]')) {
-        const match = (a.getAttribute('href') || '').match(ownStatusPattern)
-        if (!match) continue
-        try {
-          const ms = Number((BigInt(match[1]) >> 22n) + TWITTER_EPOCH)
-          if (!Number.isNaN(ms) && ms <= Date.now()) dates.push(ms)
-        } catch {
-          // Malformed/non-numeric id; skip it.
-        }
-      }
-
-      const protectedPosts = /posts are protected/i.test(body)
-      const noPosts = /hasn.t posted/i.test(body)
-      return {
-        exists: true,
-        suspended: false,
-        latestPost: dates.length ? new Date(Math.max(...dates)).toISOString() : null,
-        postIssue: dates.length
-          ? null
-          : protectedPosts
-            ? 'protected'
-            : noPosts
-              ? 'no-public-posts'
-              : 'timeline-not-rendered',
-      }
-    }, handle)
-
-    if (!result) {
-      return {
-        result: null,
-        attempt: attempt('puppeteer', 'blocked', 'X did not render the logged-out profile'),
-      }
-    }
-    const status = result.latestPost ? 'success' : result.postIssue || 'timeline-not-rendered'
-    delete result.postIssue
-    return { result, attempt: attempt('puppeteer', status) }
-  } finally {
-    await page.close().catch(() => {})
-  }
-}
-
 function metricEvidence(metric, level, label, detail, delta) {
   return { ...ev(level, label, detail, delta), metric }
 }
@@ -277,20 +197,29 @@ export function followerEvidence(handle, result) {
   }
   // X is one of the two primary "is this project alive at all" signals (with
   // website liveness), so its deltas are weighted higher than secondary
-  // community signals like Discord/Telegram.
+  // community signals like Discord/Telegram. A meaningful audience requires
+  // more than 2,000 followers — below that line reads as a weak signal.
   if (followers >= 20000) {
     return metricEvidence('x-followers', 'good', 'X established audience (20K+ followers)', detail, 10)
   }
   if (followers >= 5000) {
     return metricEvidence('x-followers', 'good', 'X decent audience (5K+ followers)', detail, 6)
   }
-  if (followers >= 1000) {
-    return metricEvidence('x-followers', 'info', 'X small audience (1K+ followers)', detail, 3)
+  if (followers > 2000) {
+    return metricEvidence('x-followers', 'info', 'X small audience (2K+ followers)', detail, 3)
   }
-  return metricEvidence('x-followers', 'warn', 'X tiny audience (<1K followers)', detail, -4)
+  return metricEvidence('x-followers', 'warn', 'X weak audience (≤2K followers)', detail, -4)
 }
 
-export function lastPostEvidence(handle, latestPost, unavailableDetail = null) {
+/** Short "(live)" / "(cached)" / "(stale cache)" tag so a shown date's trustworthiness is visible at a glance, not just inferred. */
+function freshnessTag(postSource) {
+  if (postSource === 'cache') return ' (cached)'
+  if (postSource === 'stale-cache') return ' (stale cache)'
+  if (postSource === 'official-api' || postSource === 'syndication') return ' (live)'
+  return ''
+}
+
+export function lastPostEvidence(handle, latestPost, postSource, unavailableDetail = null) {
   if (!latestPost) {
     return metricEvidence(
       'x-last-post',
@@ -301,23 +230,24 @@ export function lastPostEvidence(handle, latestPost, unavailableDetail = null) {
     )
   }
 
+  const tag = freshnessTag(postSource)
   const age = daysAgo(latestPost)
   if (age == null) {
     return metricEvidence('x-last-post', 'info', 'X last post date invalid', `@${handle}`, 0)
   }
   if (age <= X_LAST_POST_AGE_DAYS.active) {
-    return metricEvidence('x-last-post', 'good', `X active (posted ≤${X_LAST_POST_AGE_DAYS.active}d)`, `@${handle} · ${fmtDate(latestPost)}`, 20)
+    return metricEvidence('x-last-post', 'good', `X active (posted ≤${X_LAST_POST_AGE_DAYS.active}d)`, `@${handle} · ${fmtDate(latestPost)}${tag}`, 20)
   }
   if (age <= X_LAST_POST_AGE_DAYS.recent) {
-    return metricEvidence('x-last-post', 'good', `X recent (posted ≤${X_LAST_POST_AGE_DAYS.recent}d)`, `@${handle} · ${fmtDate(latestPost)}`, 12)
+    return metricEvidence('x-last-post', 'good', `X recent (posted ≤${X_LAST_POST_AGE_DAYS.recent}d)`, `@${handle} · ${fmtDate(latestPost)}${tag}`, 12)
   }
   if (age <= X_LAST_POST_AGE_DAYS.quiet) {
-    return metricEvidence('x-last-post', 'warn', `X quiet (${X_LAST_POST_AGE_DAYS.recent + 1}–${X_LAST_POST_AGE_DAYS.quiet}d)`, `@${handle} · ${fmtDate(latestPost)}`, -8)
+    return metricEvidence('x-last-post', 'warn', `X quiet (${X_LAST_POST_AGE_DAYS.recent + 1}–${X_LAST_POST_AGE_DAYS.quiet}d)`, `@${handle} · ${fmtDate(latestPost)}${tag}`, -8)
   }
   if (age <= X_LAST_POST_AGE_DAYS.silent) {
-    return metricEvidence('x-last-post', 'bad', `X silent >${X_LAST_POST_AGE_DAYS.quiet}d — likely no progress`, `@${handle} · last post ${fmtDate(latestPost)}`, -25)
+    return metricEvidence('x-last-post', 'bad', `X silent >${X_LAST_POST_AGE_DAYS.quiet}d — likely no progress`, `@${handle} · last post ${fmtDate(latestPost)}${tag}`, -25)
   }
-  return metricEvidence('x-last-post', 'bad', `X silent >${X_LAST_POST_AGE_DAYS.silent}d — project likely abandoned`, `@${handle} · last post ${fmtDate(latestPost)}`, -32)
+  return metricEvidence('x-last-post', 'bad', `X silent >${X_LAST_POST_AGE_DAYS.silent}d — project likely abandoned`, `@${handle} · last post ${fmtDate(latestPost)}${tag}`, -32)
 }
 
 function unavailablePostSummary(result, attempts) {
@@ -327,17 +257,11 @@ function unavailablePostSummary(result, attempts) {
   if (attempts.some((item) => item.status === 'rate-limited')) {
     return {
       status: 'rate-limited',
-      detail: 'X rate-limited the timeline request, and the logged-out fallback exposed no post timestamps.',
+      detail: 'X rate-limited the timeline request; no other live source had a post timestamp.',
     }
   }
   if (attempts.some((item) => item.status === 'no-public-posts')) {
     return { status: 'no-public-posts', detail: 'No public posts were returned for this account.' }
-  }
-  if (attempts.some((item) => item.status === 'timeline-not-rendered')) {
-    return {
-      status: 'unavailable',
-      detail: 'The profile loaded, but X did not expose its timeline to the logged-out browser.',
-    }
   }
   const failed = attempts.filter((item) => item.status !== 'success')
   const detail = failed.length
@@ -402,7 +326,16 @@ export async function checkX(project, ctx) {
   const cached = (await ctx.store?.get(cacheKey)) ?? null
   const lastFetchedAt = cached?.checkedAt ? new Date(cached.checkedAt).getTime() : NaN
   const cacheAgeMs = Number.isNaN(lastFetchedAt) ? Infinity : Date.now() - lastFetchedAt
-  const freshCache = X_RESULT_CACHE_ENABLED && Boolean(cached?.result) && cacheAgeMs < SIGNAL_FRESH_FETCH_MS
+  // A last-post date that only ever came from the logged-out Puppeteer scrape
+  // isn't trustworthy enough to skip a live retry for the full cache window:
+  // X sometimes serves that scrape a stale/decoy snapshot with zero live data
+  // behind it (confirmed — no real timeline API call fires at all), so a
+  // puppeteer-sourced date can be silently wrong by months. Don't let it
+  // block a live retry once syndication/the official API might be available
+  // again; other sources' results are trusted for the full window as normal.
+  const cachedPostIsTrustworthy = cached?.postSource !== 'puppeteer'
+  const freshCache = X_RESULT_CACHE_ENABLED && Boolean(cached?.result) &&
+    cacheAgeMs < SIGNAL_FRESH_FETCH_MS && cachedPostIsTrustworthy
 
   let profile = freshCache ? profileSnapshot(cached.result) : null
   let postResult = freshCache ? cached.result : null
@@ -462,31 +395,24 @@ export async function checkX(project, ctx) {
       }
     }
 
+    // No logged-out-browser fallback for the post date: X reliably serves
+    // that scrape a stale/decoy snapshot for many accounts (confirmed — the
+    // page never fires a single live timeline API call), so a puppeteer-
+    // sourced date can be silently wrong by months. If official-api and
+    // syndication both come up empty, the post is honestly "unavailable"
+    // rather than risking a wrong-but-confident-looking answer. Profile data
+    // still gets one more attempt via fxtwitter if still missing.
     const needsProfile = profile?.exists == null ||
       (profile.exists !== false && profile.followers == null)
-    const needsPost = !postResult?.latestPost && profile?.exists !== false && !profile?.protected
-    if (needsProfile || needsPost) {
-      const profilePromise = needsProfile
-        ? viaFxTwitter(handle).catch(() => null)
-        : Promise.resolve(null)
-      const browserPromise = needsPost
-        ? runQueued(ctx.xBrowserQueue, () => viaPuppeteer(handle, ctx.getBrowser))
-            .catch((error) => ({ result: null, attempt: attempt('puppeteer', 'failed', error.message) }))
-        : Promise.resolve(null)
-
-      // When the combined syndication call is unavailable, fetch the audience
-      // fallback and logged-out timeline concurrently.
-      const [fx, browser] = await Promise.all([profilePromise, browserPromise])
-      if (fx) {
-        profile = mergeProfile(profile, profileSnapshot(fx))
-        profileSource = 'fxtwitter'
-      }
-      if (browser) {
-        postAttempts.push(browser.attempt)
-        if (browser.result && profile?.exists !== false && !profile?.protected) {
-          postResult = browser.result
-          if (browser.result.latestPost) postSource = 'puppeteer'
+    if (needsProfile) {
+      try {
+        const fx = await viaFxTwitter(handle)
+        if (fx) {
+          profile = mergeProfile(profile, profileSnapshot(fx))
+          profileSource = 'fxtwitter'
         }
+      } catch {
+        // Profile just stays whatever was already resolved above.
       }
     }
   }
@@ -530,7 +456,7 @@ export async function checkX(project, ctx) {
   // a stale-cache fallback (live sources were unavailable) does not, so the
   // very next run retries live sources instead of waiting out the window.
   if (ctx.store && result.exists != null && !freshCache && postSource !== 'stale-cache') {
-    await ctx.store.set(cacheKey, { result, checkedAt: new Date().toISOString() })
+    await ctx.store.set(cacheKey, { result, postSource, checkedAt: new Date().toISOString() })
   }
 
   if (!result.exists) {
@@ -566,6 +492,6 @@ export async function checkX(project, ctx) {
   // entries. A large but abandoned account (or a small active one) now shows
   // both facts and receives both deltas instead of one replacing the other.
   evidence.push(followerEvidence(handle, result))
-  evidence.push(lastPostEvidence(handle, result.latestPost, facts.xPostDetail))
+  evidence.push(lastPostEvidence(handle, result.latestPost, postSource, facts.xPostDetail))
   return { facts, evidence }
 }

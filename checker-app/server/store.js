@@ -82,5 +82,18 @@ export function createStore() {
         console.error('[store] set failed:', err.message)
       }
     },
+
+    /** Wipes every cached signal result, forcing the next run to re-fetch everything live. User-triggered from the "Clear check cache" button. */
+    async clear() {
+      preloaded.clear()
+      const sql = getSql()
+      if (!sql) return
+      try {
+        await ensureSchema(sql)
+        await sql`DELETE FROM signal_cache`
+      } catch (err) {
+        console.error('[store] clear failed:', err.message)
+      }
+    },
   }
 }

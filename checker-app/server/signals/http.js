@@ -37,23 +37,26 @@ export async function checkHttp(project) {
     }
   } catch (err) {
     const reason = err.name === 'AbortError' ? 'timed out' : err.cause?.code || err.message
-    evidence.push(ev('bad', 'Website unreachable', `${reason}`, -25))
+    // Website liveness is one of the two primary "is this project alive at
+    // all" signals (with X), so both its positive and negative deltas carry
+    // more weight than secondary signals like DNS/domain/sitemap.
+    evidence.push(ev('bad', 'Website unreachable', `${reason}`, -35))
     return { facts, evidence }
   }
 
   if (facts.status == null) {
-    evidence.push(ev('bad', 'Redirect loop', `More than ${MAX_REDIRECTS} redirects`, -15))
+    evidence.push(ev('bad', 'Redirect loop', `More than ${MAX_REDIRECTS} redirects`, -20))
     return { facts, evidence }
   }
 
   if (facts.status >= 200 && facts.status < 300) {
-    evidence.push(ev('good', `Website up (HTTP ${facts.status})`, null, 25))
+    evidence.push(ev('good', `Website up (HTTP ${facts.status})`, null, 32))
   } else if (facts.status === 401 || facts.status === 403) {
-    evidence.push(ev('warn', `Website responds but blocks bots (HTTP ${facts.status})`, null, 10))
+    evidence.push(ev('warn', `Website responds but blocks bots (HTTP ${facts.status})`, null, 12))
   } else if (facts.status >= 400 && facts.status < 500) {
-    evidence.push(ev('bad', `Website client error (HTTP ${facts.status})`, null, -12))
+    evidence.push(ev('bad', `Website client error (HTTP ${facts.status})`, null, -18))
   } else if (facts.status >= 500) {
-    evidence.push(ev('bad', `Website server error (HTTP ${facts.status})`, null, -18))
+    evidence.push(ev('bad', `Website server error (HTTP ${facts.status})`, null, -26))
   }
 
   // Redirect analysis: cross-domain redirect can mean project moved / domain parked
@@ -62,7 +65,7 @@ export async function checkHttp(project) {
     const endDomain = domainOf(facts.finalUrl)
     if (startDomain && endDomain && startDomain !== endDomain) {
       evidence.push(
-        ev('warn', 'Redirects to different domain', `${startDomain} → ${endDomain}`, -8)
+        ev('warn', 'Redirects to different domain', `${startDomain} → ${endDomain}`, -10)
       )
     } else {
       evidence.push(

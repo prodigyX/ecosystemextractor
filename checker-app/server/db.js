@@ -7,7 +7,7 @@ let cachedUrl = null
 /**
  * Returns a memoized Neon Postgres client, or null if no connection string
  * is configured yet. Every durable server-side table (signal cache, saved
- * runs, etc.) shares this one client.
+ * runs, rate-limit status) shares this one client.
  *
  * Provision a Postgres database via the Vercel dashboard's Storage tab (the
  * Neon integration) and link it to this project; Vercel injects a

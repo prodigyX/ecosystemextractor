@@ -74,8 +74,10 @@ export async function checkContent(project, ctx) {
     const now = new Date().getFullYear()
     if (year >= 2000 && year <= now + 1) {
       facts.copyrightYear = year
+      // Copyright-year staleness is a weak/secondary signal, weighted below
+      // the primary website and X liveness signals.
       if (now - year >= 2) {
-        evidence.push(ev('warn', 'Stale copyright year', `© ${year}`, -5))
+        evidence.push(ev('warn', 'Stale copyright year', `© ${year}`, -3))
       } else {
         evidence.push(ev('info', 'Copyright year current', `© ${year}`, 0))
       }
@@ -105,7 +107,10 @@ export async function checkContent(project, ctx) {
         await ctx.store.set(key, { ...prev, lastChecked: nowIso })
       } else {
         facts.contentChanged = true
-        evidence.push(ev('good', 'Homepage content changed since last check', null, 3))
+        // Content-hash change is a weak/secondary signal (below primary
+        // website/X liveness signals) — the site not merely being up but its
+        // homepage actually changing between checks.
+        evidence.push(ev('good', 'Homepage content changed since last check', null, 2))
         await ctx.store.set(key, { ...prev, hash: facts.contentHash, lastChanged: nowIso, lastChecked: nowIso })
       }
     } else {

@@ -1,5 +1,6 @@
 import { fetchTimeout, ev, daysAgo, fmtDate } from '../util.js'
-import { GITHUB_PUSH_AGE_DAYS, GITHUB_RESULT_CACHE_ENABLED, GITHUB_RESULT_CACHE_TTL_MS } from '../config.js'
+import { GITHUB_PUSH_AGE_DAYS, GITHUB_RESULT_CACHE_ENABLED, SIGNAL_FRESH_FETCH_MS } from '../config.js'
+import { recordGithubRateLimit } from '../rateLimitStatus.js'
 
 function ghHeaders(token) {
   const h = { Accept: 'application/vnd.github+json' }
@@ -16,10 +17,22 @@ function parseGithubUrl(url) {
   return { owner, repo: repo || null }
 }
 
+/**
+ * Returns the parsed JSON body for a confirmed-successful lookup, or `null`
+ * for a confirmed 404 (repo/user genuinely doesn't exist) — the only two
+ * outcomes callers should treat as a definitive answer. Anything else
+ * (rate-limited, timeout, 5xx, malformed response) throws, so callers report
+ * it as inconclusive rather than mistaking it for a confirmed absence.
+ */
 async function ghJson(url, token) {
   const res = await fetchTimeout(url, { headers: ghHeaders(token) }, 10000)
-  if (res.status === 403 || res.status === 429) throw new Error('rate-limited')
-  if (!res.ok) return null
+  // Capture the live quota headers regardless of outcome — this is a genuine
+  // live call, unlike a cache hit, so it's the only place that can tell the
+  // footer anything new about the current GitHub quota.
+  await recordGithubRateLimit(res.headers)
+  if (res.status === 403 || res.status === 429) throw new Error('GitHub API rate-limited')
+  if (res.status === 404) return null
+  if (!res.ok) throw new Error(`GitHub API HTTP ${res.status}`)
   return res.json()
 }
 
@@ -48,14 +61,18 @@ export async function checkGithub(project, ctx) {
 
   const parsed = parseGithubUrl(link)
   if (!parsed) return { facts, evidence: [ev('info', 'Unrecognized GitHub URL', link, 0)] }
+  // Rate-limit protection: this record (this exact owner/repo) only gets a
+  // live GitHub API call if it's been more than SIGNAL_FRESH_FETCH_DAYS since
+  // its own last successful fetch — otherwise reuse the cached result and
+  // skip the live call entirely. Each repo's cache entry is independent.
   const cacheKey = `github:${parsed.owner.toLowerCase()}/${parsed.repo?.toLowerCase() ?? '*'}`
   const cached = await ctx.store?.get(cacheKey)
-  const checkedAt = new Date(cached?.checkedAt ?? 0).getTime()
+  const checkedAt = cached?.checkedAt ? new Date(cached.checkedAt).getTime() : NaN
   const cacheAge = Number.isNaN(checkedAt) ? Infinity : Date.now() - checkedAt
   if (
     GITHUB_RESULT_CACHE_ENABLED &&
     cached?.result?.repo &&
-    cacheAge < GITHUB_RESULT_CACHE_TTL_MS
+    cacheAge < SIGNAL_FRESH_FETCH_MS
   ) {
     Object.assign(facts, cached.result, { githubUrl: link, githubSource: 'cache' })
     return { facts, evidence: [activityEvidence(facts)] }

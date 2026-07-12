@@ -44,3 +44,31 @@ export function filterProjects(projects, deep, { search, statusFilter, verdictFi
     return true
   })
 }
+
+/**
+ * @typedef {{key: 'project'|'score', direction: 'asc'|'desc'}} SortState
+ */
+
+/**
+ * Sorts projects for the results table. Unchecked projects have no score yet,
+ * so a 'score' sort always pushes them to the end regardless of direction —
+ * otherwise every unrun project would tie at the top of an ascending sort.
+ * @param {import('../../shared/domain/projects.js').Project[]} projects
+ * @param {Record<string, {score?: number}>} deep
+ * @param {SortState|null} sort
+ */
+export function sortProjects(projects, deep, sort) {
+  if (!sort) return projects
+  const dir = sort.direction === 'desc' ? -1 : 1
+  return [...projects].sort((a, b) => {
+    if (sort.key === 'project') {
+      return a.name.localeCompare(b.name) * dir
+    }
+    const scoreA = deep[a.id]?.score
+    const scoreB = deep[b.id]?.score
+    if (scoreA == null && scoreB == null) return 0
+    if (scoreA == null) return 1
+    if (scoreB == null) return -1
+    return (scoreA - scoreB) * dir
+  })
+}

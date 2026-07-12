@@ -14,22 +14,42 @@ const COLUMN_COUNT = 11
  *   onToggleExpand: (id: string) => void,
  *   selectedProjectId: string|null,
  *   onOpenDetail: (id: string) => void,
+ *   sort?: {key: 'project'|'score', direction: 'asc'|'desc'}|null,
+ *   onSort?: (key: 'project'|'score') => void,
  * }} props
  */
-export function ResultsTable({ projects, deep, expanded, onToggleExpand, selectedProjectId, onOpenDetail }) {
+export function ResultsTable({ projects, deep, expanded, onToggleExpand, selectedProjectId, onOpenDetail, sort, onSort }) {
+  const sortIndicator = (key) => {
+    if (sort?.key !== key) return null
+    return <span className={`chevron sort-chevron ${sort.direction === 'asc' ? 'chevron-up' : ''}`} aria-hidden="true" />
+  }
+  const ariaSort = (key) => (sort?.key === key ? (sort.direction === 'asc' ? 'ascending' : 'descending') : 'none')
+
   return (
     <div className="table-wrap">
       <table>
         <thead>
           <tr>
             <th className="col-num">#</th>
-            <th>Project</th>
+            <th
+              className="col-sortable"
+              aria-sort={ariaSort('project')}
+              onClick={() => onSort?.('project')}
+            >
+              <span className="th-sort-label">Project{sortIndicator('project')}</span>
+            </th>
             <th>Website</th>
             <th className="col-status">Website Status</th>
             <th>X (Twitter)</th>
             <th className="col-status">X Status</th>
             <th className="col-status col-overall">Overall</th>
-            <th className="col-score">Score</th>
+            <th
+              className="col-score col-sortable"
+              aria-sort={ariaSort('score')}
+              onClick={() => onSort?.('score')}
+            >
+              <span className="th-sort-label">Score{sortIndicator('score')}</span>
+            </th>
             <th className="col-status">Verdict</th>
             <th className="col-detail"></th>
             <th className="col-expand"></th>

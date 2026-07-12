@@ -33,13 +33,21 @@ export async function checkDnsSsl(project) {
     return { facts, evidence: [ev('bad', 'Invalid website URL', project.website, -10)] }
   }
 
-  // DNS
+  // DNS — dns-ssl is a secondary signal, weighted below the primary website
+  // and X liveness signals, but a confirmed non-existent domain (ENOTFOUND)
+  // is still a strong, real negative finding, unlike a transient resolver
+  // error (timeout, temporary failure, etc.), which is genuinely
+  // inconclusive and must not be scored as if it were confirmed.
   try {
     const addrs = await dns.lookup(host, { all: true })
     facts.dns = addrs.map((a) => a.address)
-    evidence.push(ev('good', 'DNS resolves', `${addrs.length} record(s)`, 3))
-  } catch {
-    evidence.push(ev('bad', 'DNS does not resolve', host, -25))
+    evidence.push(ev('good', 'DNS resolves', `${addrs.length} record(s)`, 2))
+  } catch (err) {
+    if (err.code === 'ENOTFOUND') {
+      evidence.push(ev('bad', 'DNS does not resolve', host, -18))
+    } else {
+      evidence.push(ev('info', 'DNS lookup inconclusive', err.code || err.message, 0))
+    }
     return { facts, evidence } // no point checking SSL
   }
 
@@ -51,17 +59,17 @@ export async function checkDnsSsl(project) {
       const left = daysUntil(cert.valid_to)
       facts.sslDaysLeft = left
       if (left != null && left < 0) {
-        evidence.push(ev('bad', 'SSL certificate expired', fmtDate(cert.valid_to), -12))
+        evidence.push(ev('bad', 'SSL certificate expired', fmtDate(cert.valid_to), -10))
       } else if (left != null && left < 14) {
-        evidence.push(ev('warn', 'SSL certificate expires soon', `${left} days left`, -3))
+        evidence.push(ev('warn', 'SSL certificate expires soon', `${left} days left`, -2))
       } else if (!authorized) {
-        evidence.push(ev('warn', 'SSL certificate not trusted', cert.issuer?.O || 'unknown issuer', -5))
+        evidence.push(ev('warn', 'SSL certificate not trusted', cert.issuer?.O || 'unknown issuer', -3))
       } else {
-        evidence.push(ev('good', 'SSL valid', `expires ${fmtDate(cert.valid_to)}`, 5))
+        evidence.push(ev('good', 'SSL valid', `expires ${fmtDate(cert.valid_to)}`, 3))
       }
     }
   } catch (err) {
-    evidence.push(ev('warn', 'HTTPS handshake failed', err.message, -8))
+    evidence.push(ev('warn', 'HTTPS handshake failed', err.message, -5))
   }
 
   return { facts, evidence }

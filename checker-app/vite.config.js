@@ -7,6 +7,11 @@ import { runPipeline } from './server/pipeline.js'
 import { createStore } from './server/store.js'
 import { loadEnv } from './server/util.js'
 import { BERACHAIN_DIRECTORY_URL } from './server/config.js'
+import { getRateLimitSnapshot, refreshGithubRateLimit } from './server/rateLimitStatus.js'
+import { getSql } from './server/db.js'
+import { listSavedRunsMeta, getSavedRun, saveSnapshot } from './server/savedRuns.js'
+import { isValidUuid, getClientIp } from './server/api-helpers.js'
+import { isRateLimited } from './server/rateLimiter.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
@@ -77,6 +82,24 @@ function sanitizeProjects(raw) {
   }))
 }
 
+// Saved-run snapshots carry full check evidence per project, not the
+// lightweight id/name/website/x shape sanitizeProjects above produces for
+// outbound checks — a different, more permissive validator.
+const MAX_SAVED_RUN_BODY_BYTES = 8 * 1024 * 1024
+
+function sanitizeSnapshotBody(body) {
+  const projects = body?.projects
+  const deep = body?.deep
+  if (!Array.isArray(projects)) throw new Error('projects must be an array')
+  if (projects.length === 0) throw new Error('No projects provided')
+  if (projects.length > MAX_PROJECTS_PER_RUN) throw new Error(`Too many projects (max ${MAX_PROJECTS_PER_RUN})`)
+  if (!deep || typeof deep !== 'object' || Array.isArray(deep)) throw new Error('deep must be an object')
+  const checkType = body?.checkType === 'deep' ? 'deep' : body?.checkType === 'quick' ? 'quick' : null
+  if (!checkType) throw new Error("checkType must be 'quick' or 'deep'")
+  const fileName = typeof body?.fileName === 'string' ? body.fileName.slice(0, 200) : null
+  return { projects, deep, checkType, fileName }
+}
+
 function securityHeadersPlugin() {
   return {
     name: 'security-headers',
@@ -131,6 +154,12 @@ function berachainExtractPlugin() {
         if (req.method !== 'GET') {
           res.statusCode = 405
           res.end('GET only')
+          return
+        }
+        if (isRateLimited(`extract:${getClientIp(req)}`, { limit: 5, windowMs: 60_000 })) {
+          res.statusCode = 429
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: 'Too many requests — please slow down.' }))
           return
         }
         let browser
@@ -224,6 +253,12 @@ function berachainExtractPlugin() {
           res.end('POST only')
           return
         }
+        if (isRateLimited(`deep-check:${getClientIp(req)}`, { limit: 5, windowMs: 60_000 })) {
+          res.statusCode = 429
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: 'Too many requests — please slow down.' }))
+          return
+        }
         try {
           const body = JSON.parse(await readBody(req))
           const projects = sanitizeProjects(body.projects)
@@ -233,6 +268,7 @@ function berachainExtractPlugin() {
           res.setHeader('X-Accel-Buffering', 'no')
 
           const env = loadEnv(__dirname)
+          // Postgres-backed (see server/store.js) — durable across restarts.
           const store = createStore()
           const emit = (event) => res.write(JSON.stringify(event) + '\n')
 
@@ -247,6 +283,97 @@ function berachainExtractPlugin() {
             res.write(JSON.stringify({ type: 'error', error: err.message }) + '\n')
             res.end()
           }
+        }
+      })
+
+      // ── Rate-limit status: last-observed X syndication / GitHub API quota ──
+      server.middlewares.use('/api/rate-limits', async (req, res) => {
+        if (req.method !== 'GET') {
+          res.statusCode = 405
+          res.end('GET only')
+          return
+        }
+        const env = loadEnv(__dirname)
+        await refreshGithubRateLimit(env.GITHUB_TOKEN)
+        res.setHeader('Content-Type', 'application/json')
+        res.end(JSON.stringify(await getRateLimitSnapshot()))
+      })
+
+      // ── Clear cache: wipes the Postgres-backed store without restarting ──
+      server.middlewares.use('/api/clear-cache', async (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405
+          res.end('POST only')
+          return
+        }
+        if (isRateLimited(`clear-cache:${getClientIp(req)}`, { limit: 10, windowMs: 60_000 })) {
+          res.statusCode = 429
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: 'Too many requests — please slow down.' }))
+          return
+        }
+        await createStore().clear()
+        res.setHeader('Content-Type', 'application/json')
+        res.end(JSON.stringify({ cleared: true }))
+      })
+
+      // ── Saved-run history: durable, Postgres-backed (see server/savedRuns.js) ──
+      server.middlewares.use('/api/saved-runs', async (req, res) => {
+        if (isRateLimited(`saved-runs:${getClientIp(req)}`, { limit: 30, windowMs: 60_000 })) {
+          res.statusCode = 429
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: 'Too many requests — please slow down.' }))
+          return
+        }
+
+        const env = loadEnv(__dirname)
+        const sql = getSql(env)
+        if (!sql) {
+          res.statusCode = 503
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: 'Saved-run history is not configured yet — set DATABASE_URL (or POSTGRES_URL) in .env.' }))
+          return
+        }
+
+        try {
+          if (req.method === 'GET') {
+            const url = new URL(req.url, `http://${req.headers.host}`)
+            const id = url.searchParams.get('id')
+            res.setHeader('Content-Type', 'application/json')
+            if (id) {
+              if (id !== 'latest' && !isValidUuid(id)) {
+                res.statusCode = 400
+                res.end(JSON.stringify({ error: 'Invalid id' }))
+                return
+              }
+              const run = await getSavedRun(sql, id === 'latest' ? null : id)
+              if (!run) {
+                res.statusCode = 404
+                res.end(JSON.stringify({ error: 'Saved run not found' }))
+                return
+              }
+              res.end(JSON.stringify(run))
+              return
+            }
+            res.end(JSON.stringify(await listSavedRunsMeta(sql)))
+            return
+          }
+
+          if (req.method === 'POST') {
+            const body = JSON.parse(await readBody(req, MAX_SAVED_RUN_BODY_BYTES))
+            const snapshot = sanitizeSnapshotBody(body)
+            const saved = await saveSnapshot(sql, snapshot)
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify(saved))
+            return
+          }
+
+          res.statusCode = 405
+          res.end('GET or POST only')
+        } catch (err) {
+          res.statusCode = 500
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: err.message }))
         }
       })
     },

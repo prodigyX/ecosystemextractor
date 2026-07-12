@@ -12,6 +12,7 @@ import { fmtSavedAt } from '../lib/formatters.js'
  *   onDrop: (e: React.DragEvent) => void,
  *   onBrowseClick: () => void,
  *   onFetchFromBerachain: () => void,
+ *   onUseLastProjectList: () => void,
  *   history: import('../../features/saved-runs/savedRunsService.js').SavedRunMeta[],
  *   onLoadHistory: (id: string) => void,
  * }} props
@@ -22,6 +23,7 @@ export function Dropzone({
   onDrop,
   onBrowseClick,
   onFetchFromBerachain,
+  onUseLastProjectList,
   history,
   onLoadHistory,
 }) {
@@ -49,7 +51,7 @@ export function Dropzone({
           disabled={fetching}
         >
           <span className="source-option-icon" aria-hidden="true">
-            <span className={fetching ? 'spin' : ''}>{fetching ? '⟳' : '◎'}</span>
+            {fetching ? <span className="spinner-ring" /> : '◎'}
           </span>
           <span className="source-option-copy">
             <span className="source-option-label" aria-live="polite">
@@ -63,6 +65,24 @@ export function Dropzone({
           </span>
           {!fetching && <span className="source-option-arrow" aria-hidden="true">→</span>}
         </button>
+
+        {history.length > 0 && (
+          <button
+            type="button"
+            className="source-option source-option-reuse"
+            onClick={onUseLastProjectList}
+            disabled={fetching}
+          >
+            <span className="source-option-icon" aria-hidden="true">⚡</span>
+            <span className="source-option-copy">
+              <span className="source-option-label">Use last project list</span>
+              <span className="source-option-description">
+                Skip the live fetch — reuse the {history[0].count}-project list from {fmtSavedAt(history[0].savedAt)}, run a fresh check.
+              </span>
+            </span>
+            <span className="source-option-arrow" aria-hidden="true">→</span>
+          </button>
+        )}
 
         <button
           type="button"

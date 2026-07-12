@@ -8,7 +8,8 @@ import { checkDiscord } from './signals/discord.js'
 import { checkTelegram } from './signals/telegram.js'
 import { checkDefillama } from './signals/defillama.js'
 import { checkX, xHandleFromUrl } from './signals/x.js'
-import { domainOf } from './util.js'
+import { domainOf, ev } from './util.js'
+import { SCORE_WEIGHTS } from './config.js'
 
 const PROJECT_CONCURRENCY = 4
 const MAX_HISTORY_ENTRIES = 10
@@ -100,6 +101,23 @@ async function checkProject(project, shared, emit) {
   const contentResult = await safeRun('content', () => checkContent(project, ctx))
   ctx.links = contentResult.facts.links || {}
   collect(contentResult)
+
+  // Cross-signal: having just one of Discord/Telegram is normal and isn't
+  // penalized by either signal on its own (see server/signals/discord.js,
+  // server/signals/telegram.js) — but having neither at all is a real red
+  // flag, scored once here rather than as two stacked per-signal penalties.
+  // Only applies once the homepage was actually scanned for links (ctx.html
+  // present) — if the site itself was unreachable, that's inconclusive, not
+  // a confirmed absence, and http.js's own penalty already covers it.
+  if (ctx.html && !ctx.links.discord && !ctx.links.telegram) {
+    collect({
+      name: 'telegram',
+      facts: {},
+      evidence: [
+        { ...ev('bad', 'No Discord or Telegram community link found', null, SCORE_WEIGHTS.community.noSocialLink), signal: 'telegram' },
+      ],
+    })
+  }
 
   const stageB = [
     safeRun('sitemap', () => checkSitemap(project, ctx)).then(collect),

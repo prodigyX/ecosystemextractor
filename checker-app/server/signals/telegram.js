@@ -1,9 +1,15 @@
 import { fetchTimeout, ev, daysAgo, fmtDate } from '../util.js'
-import { TELEGRAM_MESSAGE_AGE_DAYS } from '../config.js'
+import { TELEGRAM_MESSAGE_AGE_DAYS, SCORE_WEIGHTS } from '../config.js'
+
+const W = SCORE_WEIGHTS.telegram
 
 export async function checkTelegram(project, ctx) {
   const evidence = []
   const facts = { telegramLastPost: null }
+  // A missing Telegram link isn't scored here on its own — server/pipeline.js
+  // applies one combined "no community link at all" penalty only when both
+  // Discord and Telegram are absent, instead of stacking two independent
+  // per-signal penalties for what's really one gap.
   const link = ctx.links?.telegram
   if (!link) return { facts, evidence }
 
@@ -37,13 +43,13 @@ export async function checkTelegram(project, ctx) {
     // Telegram is a secondary/community signal, weighted below the primary
     // website and X liveness signals.
     if (age <= TELEGRAM_MESSAGE_AGE_DAYS.active) {
-      evidence.push(ev('good', `Telegram active (≤${TELEGRAM_MESSAGE_AGE_DAYS.active}d)`, `@${handle} · ${fmtDate(latest)}`, 5))
+      evidence.push(ev('good', `Telegram active (≤${TELEGRAM_MESSAGE_AGE_DAYS.active}d)`, `@${handle} · ${fmtDate(latest)}`, W.active))
     } else if (age <= TELEGRAM_MESSAGE_AGE_DAYS.recent) {
-      evidence.push(ev('good', `Telegram recent (≤${TELEGRAM_MESSAGE_AGE_DAYS.recent}d)`, `@${handle} · ${fmtDate(latest)}`, 3))
+      evidence.push(ev('good', `Telegram recent (≤${TELEGRAM_MESSAGE_AGE_DAYS.recent}d)`, `@${handle} · ${fmtDate(latest)}`, W.recent))
     } else if (age <= TELEGRAM_MESSAGE_AGE_DAYS.inactive) {
-      evidence.push(ev('warn', `Telegram quiet (≤${TELEGRAM_MESSAGE_AGE_DAYS.inactive}d)`, `@${handle} · ${fmtDate(latest)}`, -2))
+      evidence.push(ev('warn', `Telegram quiet (≤${TELEGRAM_MESSAGE_AGE_DAYS.inactive}d)`, `@${handle} · ${fmtDate(latest)}`, W.quiet))
     } else {
-      evidence.push(ev('warn', `Telegram dead (>${TELEGRAM_MESSAGE_AGE_DAYS.inactive}d)`, `@${handle} · ${fmtDate(latest)}`, -5))
+      evidence.push(ev('warn', `Telegram dead (>${TELEGRAM_MESSAGE_AGE_DAYS.inactive}d)`, `@${handle} · ${fmtDate(latest)}`, W.dead))
     }
   } catch (err) {
     evidence.push(ev('info', 'Telegram check failed', err.message, 0))

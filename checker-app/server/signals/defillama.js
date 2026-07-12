@@ -1,5 +1,7 @@
 import { fetchTimeout, ev, domainOf } from '../util.js'
+import { SCORE_WEIGHTS } from '../config.js'
 
+const W = SCORE_WEIGHTS.defillama
 let protocolsCache = null
 let cacheTime = 0
 
@@ -51,12 +53,12 @@ export async function checkDefillama(project) {
       evidence.push(ev('info', 'On DefiLlama, no TVL data', match.name, 0))
     } else if (match.tvl >= 100_000) {
       evidence.push(
-        ev('good', 'Meaningful TVL on DefiLlama', `${match.name}: ${fmtUsd(match.tvl)}${match.change_7d != null ? ` (7d ${match.change_7d.toFixed(1)}%)` : ''}`, 12)
+        ev('good', 'Meaningful TVL on DefiLlama', `${match.name}: ${fmtUsd(match.tvl)}${match.change_7d != null ? ` (7d ${match.change_7d.toFixed(1)}%)` : ''}`, W.meaningfulTvl)
       )
     } else if (match.tvl >= 1_000) {
-      evidence.push(ev('info', 'Low TVL on DefiLlama', `${match.name}: ${fmtUsd(match.tvl)}`, 2))
+      evidence.push(ev('info', 'Low TVL on DefiLlama', `${match.name}: ${fmtUsd(match.tvl)}`, W.lowTvl))
     } else {
-      evidence.push(ev('warn', 'TVL near zero on DefiLlama', `${match.name}: ${fmtUsd(match.tvl)}`, -8))
+      evidence.push(ev('warn', 'TVL near zero on DefiLlama', `${match.name}: ${fmtUsd(match.tvl)}`, W.nearZeroTvl))
     }
   } catch (err) {
     evidence.push(ev('info', 'DefiLlama check failed', err.message, 0))

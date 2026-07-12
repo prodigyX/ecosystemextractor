@@ -9,9 +9,12 @@ import {
   X_FALLBACK_REFETCH_MS,
   X_FALLBACK_REFETCH_DAYS,
   X_FOLLOWER_THRESHOLDS,
+  SCORE_WEIGHTS,
 } from '../config.js'
 import { recordXRateLimit, recordXOfficialRateLimit } from '../rateLimitStatus.js'
 import { getXFallback, saveXFallback } from '../xFallback.js'
+
+const W = SCORE_WEIGHTS.x
 
 export function xHandleFromUrl(url) {
   const m = url.match(/(?:x\.com|twitter\.com)\/@?([\w]+)/i)
@@ -211,23 +214,23 @@ export function followerEvidence(handle, result) {
   // (caps the overall score) instead of a 'warn'.
   const { veryLow, weak, decent, established } = X_FOLLOWER_THRESHOLDS
   if (followers >= established) {
-    return metricEvidence('x-followers', 'good', `X established audience (${established / 1000}K+ followers)`, detail, 10)
+    return metricEvidence('x-followers', 'good', `X established audience (${established / 1000}K+ followers)`, detail, W.followerEstablished)
   }
   if (followers >= decent) {
-    return metricEvidence('x-followers', 'good', `X decent audience (${decent / 1000}K+ followers)`, detail, 6)
+    return metricEvidence('x-followers', 'good', `X decent audience (${decent / 1000}K+ followers)`, detail, W.followerDecent)
   }
   if (followers > weak) {
-    return metricEvidence('x-followers', 'info', `X small audience (${weak / 1000}K+ followers)`, detail, 3)
+    return metricEvidence('x-followers', 'info', `X small audience (${weak / 1000}K+ followers)`, detail, W.followerSmall)
   }
   if (followers >= veryLow) {
-    return metricEvidence('x-followers', 'warn', `X weak audience (${veryLow / 1000}K–${weak / 1000}K followers)`, detail, -4)
+    return metricEvidence('x-followers', 'warn', `X weak audience (${veryLow / 1000}K–${weak / 1000}K followers)`, detail, W.followerWeak)
   }
   return metricEvidence(
     'x-followers',
     'bad',
     `X very low audience (<${veryLow / 1000}K followers) — possible clone/scam`,
     detail,
-    -15
+    W.followerVeryLow
   )
 }
 
@@ -276,18 +279,18 @@ export function lastPostEvidence(handle, latestPost, postSource, unavailableDeta
     return metricEvidence('x-last-post', 'info', 'X last post date invalid', `@${handle}`, 0)
   }
   if (age <= X_LAST_POST_AGE_DAYS.active) {
-    return metricEvidence('x-last-post', 'good', `X active (posted ≤${X_LAST_POST_AGE_DAYS.active}d)`, `@${handle} · ${fmtDate(latestPost)}${tag}${freshness}`, 20)
+    return metricEvidence('x-last-post', 'good', `X active (posted ≤${X_LAST_POST_AGE_DAYS.active}d)`, `@${handle} · ${fmtDate(latestPost)}${tag}${freshness}`, W.postActive)
   }
   if (age <= X_LAST_POST_AGE_DAYS.recent) {
-    return metricEvidence('x-last-post', 'good', `X recent (posted ≤${X_LAST_POST_AGE_DAYS.recent}d)`, `@${handle} · ${fmtDate(latestPost)}${tag}${freshness}`, 12)
+    return metricEvidence('x-last-post', 'good', `X recent (posted ≤${X_LAST_POST_AGE_DAYS.recent}d)`, `@${handle} · ${fmtDate(latestPost)}${tag}${freshness}`, W.postRecent)
   }
   if (age <= X_LAST_POST_AGE_DAYS.quiet) {
-    return metricEvidence('x-last-post', 'warn', `X quiet (${X_LAST_POST_AGE_DAYS.recent + 1}–${X_LAST_POST_AGE_DAYS.quiet}d)`, `@${handle} · ${fmtDate(latestPost)}${tag}${freshness}`, -8)
+    return metricEvidence('x-last-post', 'warn', `X quiet (${X_LAST_POST_AGE_DAYS.recent + 1}–${X_LAST_POST_AGE_DAYS.quiet}d)`, `@${handle} · ${fmtDate(latestPost)}${tag}${freshness}`, W.postQuiet)
   }
   if (age <= X_LAST_POST_AGE_DAYS.silent) {
-    return metricEvidence('x-last-post', 'bad', `X silent >${X_LAST_POST_AGE_DAYS.quiet}d — likely no progress`, `@${handle} · last post ${fmtDate(latestPost)}${tag}${freshness}`, -25)
+    return metricEvidence('x-last-post', 'bad', `X silent >${X_LAST_POST_AGE_DAYS.quiet}d — likely no progress`, `@${handle} · last post ${fmtDate(latestPost)}${tag}${freshness}`, W.postSilentOverQuiet)
   }
-  return metricEvidence('x-last-post', 'bad', `X silent >${X_LAST_POST_AGE_DAYS.silent}d — project likely abandoned`, `@${handle} · last post ${fmtDate(latestPost)}${tag}${freshness}`, -32)
+  return metricEvidence('x-last-post', 'bad', `X silent >${X_LAST_POST_AGE_DAYS.silent}d — project likely abandoned`, `@${handle} · last post ${fmtDate(latestPost)}${tag}${freshness}`, W.postSilentOverSilent)
 }
 
 function unavailablePostSummary(result, attempts) {
@@ -352,7 +355,9 @@ export async function checkX(project, ctx) {
     xPostAttempts: [],
     xSource: null,
   }
-  if (!project.x) return { facts, evidence: [ev('info', 'No X link', null, 0)] }
+  // No X presence at all is a real red flag for a crypto/Web3 project, not
+  // just missing data — same severity class as a near-empty audience.
+  if (!project.x) return { facts, evidence: [ev('bad', 'No X link found', null, W.noLink)] }
 
   const handle = xHandleFromUrl(project.x)
   if (!handle) return { facts, evidence: [ev('info', 'Could not parse X handle', project.x, 0)] }

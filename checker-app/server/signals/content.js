@@ -1,5 +1,8 @@
 import { createHash } from 'node:crypto'
 import { ev, fmtDate, daysAgo } from '../util.js'
+import { SCORE_WEIGHTS } from '../config.js'
+
+const W = SCORE_WEIGHTS.content
 
 const DEAD_KEYWORDS = [
   'shutting down', 'shut down', 'has shutdown', 'is shutting',
@@ -59,13 +62,13 @@ export async function checkContent(project, ctx) {
 
   // Keyword scans
   const deadHit = DEAD_KEYWORDS.find((k) => text.includes(k))
-  if (deadHit) evidence.push(ev('bad', 'Shutdown language on homepage', `"${deadHit}"`, -30))
+  if (deadHit) evidence.push(ev('bad', 'Shutdown language on homepage', `"${deadHit}"`, W.shutdownLanguage))
 
   const migHit = MIGRATION_KEYWORDS.find((k) => text.includes(k))
-  if (migHit) evidence.push(ev('warn', 'Migration language on homepage', `"${migHit}"`, -12))
+  if (migHit) evidence.push(ev('warn', 'Migration language on homepage', `"${migHit}"`, W.migrationLanguage))
 
   const parkedHit = PARKED_SIGNS.find((k) => text.includes(k))
-  if (parkedHit) evidence.push(ev('bad', 'Domain appears parked/for sale', `"${parkedHit}"`, -30))
+  if (parkedHit) evidence.push(ev('bad', 'Domain appears parked/for sale', `"${parkedHit}"`, W.parkedDomain))
 
   // Copyright year staleness
   const yearMatches = [...text.matchAll(/(?:©|&copy;|copyright)\s*(?:\d{4}\s*[-–]\s*)?(\d{4})/g)]
@@ -77,7 +80,7 @@ export async function checkContent(project, ctx) {
       // Copyright-year staleness is a weak/secondary signal, weighted below
       // the primary website and X liveness signals.
       if (now - year >= 2) {
-        evidence.push(ev('warn', 'Stale copyright year', `© ${year}`, -3))
+        evidence.push(ev('warn', 'Stale copyright year', `© ${year}`, W.staleCopyrightYear))
       } else {
         evidence.push(ev('info', 'Copyright year current', `© ${year}`, 0))
       }
@@ -107,7 +110,7 @@ export async function checkContent(project, ctx) {
           // (X, GitHub) — not just informational trivia.
           const age = daysAgo(since)
           if (age != null && age >= 365) {
-            evidence.push(ev('warn', 'Homepage unchanged for 1+ year', `since ${fmtDate(since)}`, -8))
+            evidence.push(ev('warn', 'Homepage unchanged for 1+ year', `since ${fmtDate(since)}`, W.unchangedOverYear))
           } else {
             evidence.push(ev('info', 'Homepage unchanged since', fmtDate(since), 0))
           }
@@ -118,7 +121,7 @@ export async function checkContent(project, ctx) {
         // Content-hash change is a weak/secondary signal (below primary
         // website/X liveness signals) — the site not merely being up but its
         // homepage actually changing between checks.
-        evidence.push(ev('good', 'Homepage content changed since last check', null, 2))
+        evidence.push(ev('good', 'Homepage content changed since last check', null, W.contentChanged))
         await ctx.store.set(key, { ...prev, hash: facts.contentHash, lastChanged: nowIso, lastChecked: nowIso })
       }
     } else {

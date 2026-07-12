@@ -1,5 +1,7 @@
 import { fetchTimeout, ev, daysUntil, fmtDate, domainOf } from '../util.js'
+import { SCORE_WEIGHTS } from '../config.js'
 
+const W = SCORE_WEIGHTS.domain
 let bootstrapCache = null
 
 // TLDs missing from the IANA bootstrap but with known RDAP endpoints
@@ -47,7 +49,7 @@ export async function checkDomain(project) {
     const res = await fetchTimeout(`${base.replace(/\/$/, '')}/domain/${registrable}`, {}, 12000)
     if (res.status === 404) {
       // Registry says the domain isn't registered at all
-      evidence.push(ev('bad', 'Domain not registered', registrable, -12))
+      evidence.push(ev('bad', 'Domain not registered', registrable, W.notRegistered))
       return { facts, evidence }
     }
     if (!res.ok) {
@@ -66,13 +68,13 @@ export async function checkDomain(project) {
       // Domain registration is a secondary signal, weighted below the
       // primary website and X liveness signals.
       if (left != null && left < 0) {
-        evidence.push(ev('bad', 'Domain expired', fmtDate(exp), -15))
+        evidence.push(ev('bad', 'Domain expired', fmtDate(exp), W.expired))
       } else if (left != null && left < 30) {
-        evidence.push(ev('warn', 'Domain expires within 30 days', fmtDate(exp), -5))
+        evidence.push(ev('warn', 'Domain expires within 30 days', fmtDate(exp), W.expiresSoon))
       } else if (left != null && left < 90) {
         evidence.push(ev('info', 'Domain expires within 90 days', fmtDate(exp), 0))
       } else {
-        evidence.push(ev('good', 'Domain registration healthy', `expires ${fmtDate(exp)}`, 3))
+        evidence.push(ev('good', 'Domain registration healthy', `expires ${fmtDate(exp)}`, W.registrationHealthy))
       }
     } else {
       evidence.push(ev('info', 'Domain expiry not in RDAP data', registrable, 0))

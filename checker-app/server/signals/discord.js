@@ -1,4 +1,7 @@
 import { fetchTimeout, ev } from '../util.js'
+import { SCORE_WEIGHTS } from '../config.js'
+
+const W = SCORE_WEIGHTS.discord
 
 export async function checkDiscord(project, ctx) {
   const evidence = []
@@ -29,18 +32,18 @@ export async function checkDiscord(project, ctx) {
       // website and X liveness signals — see server/signals/http.js and
       // server/signals/x.js.
       if (members == null) {
-        evidence.push(ev('good', 'Discord invite valid', detail, 2))
+        evidence.push(ev('good', 'Discord invite valid', detail, W.inviteValid))
       } else if (members >= 5000) {
-        evidence.push(ev('good', 'Discord community large (5K+)', detail, 6))
+        evidence.push(ev('good', 'Discord community large (5K+)', detail, W.large))
       } else if (members >= 3000) {
-        evidence.push(ev('good', 'Discord community healthy (3K+)', detail, 5))
+        evidence.push(ev('good', 'Discord community healthy (3K+)', detail, W.healthy))
       } else if (members >= 500) {
-        evidence.push(ev('good', 'Discord community small', detail, 2))
+        evidence.push(ev('good', 'Discord community small', detail, W.small))
       } else {
         // A near-empty server is the same strength of red flag as a broken
         // invite link below — both read as "no real community here" and
         // cap the score the same way (archived repo, suspended X account).
-        evidence.push(ev('bad', 'Discord community tiny (<500) — possible clone/scam', detail, -25))
+        evidence.push(ev('bad', 'Discord community tiny (<500) — possible clone/scam', detail, W.tiny))
       }
     } else if (res.status === 404 || res.status === 410) {
       facts.discordValid = false
@@ -48,7 +51,7 @@ export async function checkDiscord(project, ctx) {
       // it means the project once had (or claimed) a Discord and let the
       // link rot, which reads the same as other 'bad' abandonment signals
       // (archived GitHub repo, suspended X account) and caps the score.
-      evidence.push(ev('bad', 'Discord invite expired/invalid', link, -25))
+      evidence.push(ev('bad', 'Discord invite expired/invalid', link, W.inviteExpired))
     } else {
       // A non-2xx/404/410 response (e.g. a transient 5xx or unexpected
       // status) tells us nothing conclusive about the invite — report it as

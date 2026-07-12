@@ -1,5 +1,7 @@
 import { fetchTimeout, ev, daysAgo, fmtDate } from '../util.js'
-import { SITEMAP_UPDATE_AGE_DAYS } from '../config.js'
+import { SITEMAP_UPDATE_AGE_DAYS, SCORE_WEIGHTS } from '../config.js'
+
+const W = SCORE_WEIGHTS.sitemap
 
 const FEED_PATHS = ['/sitemap.xml', '/sitemap_index.xml', '/feed', '/rss', '/feed.xml', '/blog/rss.xml']
 
@@ -41,11 +43,11 @@ export async function checkSitemap(project, ctx = {}) {
         // Sitemap/RSS freshness is a secondary signal, weighted below the
         // primary website and X liveness signals.
         if (age <= SITEMAP_UPDATE_AGE_DAYS.recent) {
-          evidence.push(ev('good', `Site content updated within ${SITEMAP_UPDATE_AGE_DAYS.recent}d`, `${path} → ${fmtDate(latest)}`, 4))
+          evidence.push(ev('good', `Site content updated within ${SITEMAP_UPDATE_AGE_DAYS.recent}d`, `${path} → ${fmtDate(latest)}`, W.updatedRecent))
         } else if (age <= SITEMAP_UPDATE_AGE_DAYS.stale) {
-          evidence.push(ev('info', `Site content updated within ${SITEMAP_UPDATE_AGE_DAYS.stale}d`, `${path} → ${fmtDate(latest)}`, 1))
+          evidence.push(ev('info', `Site content updated within ${SITEMAP_UPDATE_AGE_DAYS.stale}d`, `${path} → ${fmtDate(latest)}`, W.updatedWithinStale))
         } else {
-          evidence.push(ev('warn', `Site content stale (>${SITEMAP_UPDATE_AGE_DAYS.stale}d)`, `${path} → ${fmtDate(latest)}`, -3))
+          evidence.push(ev('warn', `Site content stale (>${SITEMAP_UPDATE_AGE_DAYS.stale}d)`, `${path} → ${fmtDate(latest)}`, W.stale))
         }
         return { facts, evidence }
       }

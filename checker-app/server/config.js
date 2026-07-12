@@ -54,3 +54,97 @@ export const GITHUB_PUSH_AGE_DAYS = Object.freeze({ active: 30, recent: 90, inac
 
 export const TELEGRAM_MESSAGE_AGE_DAYS = Object.freeze({ active: 30, recent: 90, inactive: 365 })
 export const SITEMAP_UPDATE_AGE_DAYS = Object.freeze({ recent: 90, stale: 365 })
+
+// Every non-zero score delta used by server/signals/*.js, grouped by signal.
+// Each project's score starts at 50 and every piece of evidence below adds
+// or subtracts from it (see server/pipeline.js) — tune scoring here instead
+// of hunting through each signal's implementation. Evidence with a delta of
+// 0 (purely informational — "no data available", "link discovered", etc.)
+// isn't listed here since there's nothing to tune.
+export const SCORE_WEIGHTS = Object.freeze({
+  http: {
+    unreachable: -35,
+    redirectLoop: -20,
+    up: 32,
+    botBlocked: 12,
+    clientError: -18,
+    serverError: -26,
+    crossDomainRedirect: -10,
+  },
+  dnsSsl: {
+    invalidUrl: -10,
+    dnsResolves: 2,
+    dnsFails: -18,
+    sslExpired: -10,
+    sslExpiringSoon: -2,
+    sslUntrusted: -3,
+    sslValid: 3,
+    httpsHandshakeFailed: -5,
+  },
+  domain: {
+    notRegistered: -12,
+    expired: -15,
+    expiresSoon: -5,
+    registrationHealthy: 3,
+  },
+  content: {
+    shutdownLanguage: -30,
+    migrationLanguage: -12,
+    parkedDomain: -30,
+    staleCopyrightYear: -3,
+    unchangedOverYear: -8,
+    contentChanged: 2,
+  },
+  sitemap: {
+    updatedRecent: 4,
+    updatedWithinStale: 1,
+    stale: -3,
+  },
+  x: {
+    noLink: -15,
+    followerVeryLow: -15,
+    followerWeak: -4,
+    followerSmall: 3,
+    followerDecent: 6,
+    followerEstablished: 10,
+    postActive: 20,
+    postRecent: 12,
+    postQuiet: -8,
+    postSilentOverQuiet: -25,
+    postSilentOverSilent: -32,
+  },
+  github: {
+    archived: -25,
+    active: 15,
+    recent: 8,
+    inactiveOverYear: -25,
+    notFoundOrEmpty: -5,
+  },
+  discord: {
+    inviteValid: 2,
+    large: 6,
+    healthy: 5,
+    small: 2,
+    tiny: -25,
+    inviteExpired: -25,
+  },
+  telegram: {
+    active: 5,
+    recent: 3,
+    quiet: -2,
+    dead: -5,
+  },
+  // Cross-signal: applied once in server/pipeline.js after both Discord and
+  // Telegram have been checked, only when NEITHER community link was found
+  // on the homepage. Having just one of the two is normal and unpenalized;
+  // having neither is the real red flag — a single -15, not two stacked
+  // per-signal penalties for what's really one gap.
+  community: {
+    noSocialLink: -15,
+  },
+  defillama: {
+    meaningfulTvl: 12,
+    lowTvl: 2,
+    nearZeroTvl: -8,
+  },
+})

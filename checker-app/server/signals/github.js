@@ -4,9 +4,12 @@ import {
   GITHUB_RESULT_CACHE_ENABLED,
   SIGNAL_FRESH_FETCH_MS,
   GITHUB_FALLBACK_REFETCH_MS,
+  SCORE_WEIGHTS,
 } from '../config.js'
 import { recordGithubRateLimit } from '../rateLimitStatus.js'
 import { getGithubFallback, saveGithubFallback } from '../githubFallback.js'
+
+const W = SCORE_WEIGHTS.github
 
 function ghHeaders(token) {
   const h = { Accept: 'application/vnd.github+json' }
@@ -65,7 +68,7 @@ function freshnessDetail(source, fetchedAt) {
 
 function activityEvidence(facts, source, fetchedAt) {
   if (facts.archived) {
-    return ev('bad', 'GitHub repo archived', facts.repo, -25)
+    return ev('bad', 'GitHub repo archived', facts.repo, W.archived)
   }
 
   const tag = freshnessTag(source)
@@ -73,10 +76,10 @@ function activityEvidence(facts, source, fetchedAt) {
   const age = daysAgo(facts.lastPush)
   if (age == null) return ev('info', 'GitHub repo found, no push date', `${facts.repo}${tag}${freshness}`, 0)
   const detail = `${facts.repo} · ${fmtDate(facts.lastPush)}${tag}${freshness}`
-  if (age <= GITHUB_PUSH_AGE_DAYS.active) return ev('good', `GitHub active (pushed ≤${GITHUB_PUSH_AGE_DAYS.active}d)`, detail, 15)
-  if (age <= GITHUB_PUSH_AGE_DAYS.recent) return ev('good', `GitHub recent (pushed ≤${GITHUB_PUSH_AGE_DAYS.recent}d)`, detail, 8)
+  if (age <= GITHUB_PUSH_AGE_DAYS.active) return ev('good', `GitHub active (pushed ≤${GITHUB_PUSH_AGE_DAYS.active}d)`, detail, W.active)
+  if (age <= GITHUB_PUSH_AGE_DAYS.recent) return ev('good', `GitHub recent (pushed ≤${GITHUB_PUSH_AGE_DAYS.recent}d)`, detail, W.recent)
   if (age <= GITHUB_PUSH_AGE_DAYS.inactive) return ev('info', `GitHub quiet (pushed ≤${GITHUB_PUSH_AGE_DAYS.inactive}d)`, detail, 0)
-  return ev('bad', `GitHub inactive (>${GITHUB_PUSH_AGE_DAYS.inactive}d since push)`, detail, -25)
+  return ev('bad', `GitHub inactive (>${GITHUB_PUSH_AGE_DAYS.inactive}d since push)`, detail, W.inactiveOverYear)
 }
 
 export async function checkGithub(project, ctx) {
@@ -137,7 +140,7 @@ export async function checkGithub(project, ctx) {
     }
 
     if (!repoData) {
-      evidence.push(ev('warn', 'GitHub org/repo not found or empty', link, -5))
+      evidence.push(ev('warn', 'GitHub org/repo not found or empty', link, W.notFoundOrEmpty))
       return { facts, evidence }
     }
 

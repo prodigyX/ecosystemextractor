@@ -1,18 +1,18 @@
 const DEEP_CARDS = [
-  { key: 'total', field: 'total', cls: 'total', label: 'Total' },
-  { key: 'active', field: 'active', cls: 'alive', label: 'Active' },
-  { key: 'likelyActive', field: 'likelyActive', cls: 'likely-active', label: 'Likely Active' },
-  { key: 'unclear', field: 'unclear', cls: 'maybe', label: 'Unclear' },
-  { key: 'likelyDead', field: 'likelyDead', cls: 'possibly-dead', label: 'Likely Dead' },
-  { key: 'dead', field: 'dead', cls: 'dead', label: 'Dead' },
+  { key: 'total', field: 'total', cls: 'total', label: 'Total', icon: '▦' },
+  { key: 'active', field: 'active', cls: 'alive', label: 'Active', icon: '✓' },
+  { key: 'likelyActive', field: 'likelyActive', cls: 'likely-active', label: 'Likely Active', icon: '◐' },
+  { key: 'unclear', field: 'unclear', cls: 'maybe', label: 'Unclear', icon: '?' },
+  { key: 'likelyDead', field: 'likelyDead', cls: 'possibly-dead', label: 'Likely Dead', icon: '⚠' },
+  { key: 'dead', field: 'dead', cls: 'dead', label: 'Dead', icon: '✕' },
 ]
 
 const QUICK_CARDS = [
-  { key: 'total', field: 'total', cls: 'total', label: 'Total' },
-  { key: 'alive', field: 'alive', cls: 'alive', label: 'Alive' },
-  { key: 'maybe', field: 'maybe', cls: 'maybe', label: 'Maybe' },
-  { key: 'possiblyDead', field: 'possiblyDead', cls: 'possibly-dead', label: 'Possibly Dead' },
-  { key: 'dead', field: 'dead', cls: 'dead', label: 'Dead' },
+  { key: 'total', field: 'total', cls: 'total', label: 'Total', icon: '▦' },
+  { key: 'alive', field: 'alive', cls: 'alive', label: 'Alive', icon: '✓' },
+  { key: 'maybe', field: 'maybe', cls: 'maybe', label: 'Maybe', icon: '?' },
+  { key: 'possiblyDead', field: 'possiblyDead', cls: 'possibly-dead', label: 'Possibly Dead', icon: '⚠' },
+  { key: 'dead', field: 'dead', cls: 'dead', label: 'Dead', icon: '✕' },
 ]
 
 /**
@@ -29,8 +29,11 @@ export function SummaryCards({ variant, counts }) {
     <div className="summary">
       {cards.map((c) => (
         <div key={c.key} className={`summary-card ${c.cls}`}>
-          <span className="summary-num">{counts[c.field]}</span>
-          <span className="summary-label">{c.label}</span>
+          <span className="summary-icon" aria-hidden="true">{c.icon}</span>
+          <div className="summary-text">
+            <span className="summary-num">{counts[c.field]}</span>
+            <span className="summary-label">{c.label}</span>
+          </div>
         </div>
       ))}
     </div>

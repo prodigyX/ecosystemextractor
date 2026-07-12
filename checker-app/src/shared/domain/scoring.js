@@ -159,17 +159,21 @@ function verdictFromScore(score) {
 /**
  * Re-aggregates a project's real evidence into the category buckets above.
  * Each category's score uses the exact same formula as the overall score
- * (50 base + sum of that category's evidence deltas, clamped 0-100) — just
- * scoped to a subset of signals, not a separately invented metric.
- * @param {Array<{signal: string, delta: number}>} evidence
+ * (50 base + sum of that category's evidence deltas, clamped 0-100, with a
+ * bad/warn finding capping the ceiling below a perfect/active score so it
+ * can't be outweighed to invisibility — see server/pipeline.js scoreVerdict)
+ * — just scoped to a subset of signals, not a separately invented metric.
+ * @param {Array<{signal: string, delta: number, level: string}>} evidence
  * @returns {Array<{key: string, label: string, icon: string, score: number, verdict: Verdict}>}
  */
 export function computeCategoryScores(evidence) {
   return CATEGORIES.map((cat) => {
-    const delta = evidence
-      .filter((e) => cat.signals.includes(e.signal))
-      .reduce((sum, e) => sum + (e.delta || 0), 0)
-    const score = Math.max(0, Math.min(100, 50 + delta))
+    const catEvidence = evidence.filter((e) => cat.signals.includes(e.signal))
+    const delta = catEvidence.reduce((sum, e) => sum + (e.delta || 0), 0)
+    const hasBad = catEvidence.some((e) => e.level === 'bad')
+    const hasWarn = catEvidence.some((e) => e.level === 'warn')
+    const ceiling = hasBad ? 74 : hasWarn ? 89 : 100
+    const score = Math.max(0, Math.min(ceiling, 50 + delta))
     const verdict = verdictFromScore(score)
     return {
       key: cat.key,

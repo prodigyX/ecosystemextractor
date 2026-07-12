@@ -11,7 +11,7 @@ import { checkX } from './signals/x.js'
 import { domainOf } from './util.js'
 
 const PROJECT_CONCURRENCY = 4
-const MAX_HISTORY_ENTRIES = 50
+const MAX_HISTORY_ENTRIES = 10
 
 /**
  * Appends this run's score to the project's persisted history (keyed by
@@ -28,10 +28,15 @@ function recordScoreHistory(store, storeKey, score, verdict) {
 }
 
 export function scoreVerdict(evidence) {
-  const score = Math.max(
-    0,
-    Math.min(100, 50 + evidence.reduce((sum, e) => sum + (e.delta || 0), 0))
-  )
+  const raw = 50 + evidence.reduce((sum, e) => sum + (e.delta || 0), 0)
+  // A single bad-level finding (e.g. an abandoned-looking X account) must
+  // stay visible in the final score, not get outweighed to invisibility by
+  // enough unrelated positives. A bad finding keeps the score out of the
+  // "active" band; a warn finding keeps it just short of a perfect 100.
+  const hasBad = evidence.some((e) => e.level === 'bad')
+  const hasWarn = evidence.some((e) => e.level === 'warn')
+  const ceiling = hasBad ? 74 : hasWarn ? 89 : 100
+  const score = Math.max(0, Math.min(ceiling, raw))
   let verdict
   if (score >= 75) verdict = 'active'
   else if (score >= 60) verdict = 'likely-active'
@@ -108,8 +113,19 @@ async function checkProject(project, shared, emit) {
   await Promise.all([...stageA, ...stageB])
 
   const { score, verdict } = scoreVerdict(allEvidence)
-  const order = { bad: 0, warn: 1, good: 2, info: 3 }
-  allEvidence.sort((a, b) => order[a.level] - order[b.level])
+  // Group by signal first (in a fixed order, matching the category grouping
+  // in src/shared/domain/scoring.js's CATEGORIES) so a signal's own multiple
+  // findings — e.g. X's follower-count and last-post evidence, DNS-SSL's
+  // resolve and cert checks — always land next to each other and every row
+  // reads in the same order, regardless of which signal happened to resolve
+  // first. Severity only breaks ties within the same signal.
+  const signalOrder = ['website', 'dns-ssl', 'domain', 'sitemap', 'content', 'github', 'x', 'discord', 'telegram', 'defillama']
+  const levelOrder = { bad: 0, warn: 1, good: 2, info: 3 }
+  allEvidence.sort((a, b) => {
+    const signalDiff = signalOrder.indexOf(a.signal) - signalOrder.indexOf(b.signal)
+    if (signalDiff !== 0) return signalDiff
+    return levelOrder[a.level] - levelOrder[b.level]
+  })
 
   const history = recordScoreHistory(shared.store, ctx.storeKey, score, verdict)
 
@@ -183,7 +199,6 @@ export async function runPipeline(projects, { env, store, launchBrowser }, emit)
     )
   )
 
-  store?.save()
   if (browserPromise) {
     const browser = await browserPromise
     await browser?.close().catch(() => {})

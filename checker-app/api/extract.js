@@ -1,5 +1,6 @@
 import { extractBerachainProjects } from '../server/berachain-extract.js'
-import { isSameOrigin, sendJson } from '../server/api-helpers.js'
+import { getClientIp, isSameOrigin, sendJson, sendSafeServerError } from '../server/api-helpers.js'
+import { isRateLimited } from '../server/rateLimiter.js'
 import { launchServerlessBrowser } from '../server/serverless-browser.js'
 
 export default async function handler(req, res) {
@@ -12,6 +13,11 @@ export default async function handler(req, res) {
     sendJson(res, 403, { error: 'Cross-origin requests are not allowed' })
     return
   }
+  // Every call launches a real headless browser — expensive, worth guarding.
+  if (isRateLimited(`extract:${getClientIp(req)}`, { limit: 5, windowMs: 60_000 })) {
+    sendJson(res, 429, { error: 'Too many requests — please slow down.' })
+    return
+  }
 
   try {
     const projects = await extractBerachainProjects(launchServerlessBrowser)
@@ -22,7 +28,6 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'no-store')
     sendJson(res, 200, projects)
   } catch (error) {
-    console.error('[api/extract]', error)
-    sendJson(res, 500, { error: error.message || 'Berachain extraction failed' })
+    sendSafeServerError(res, error, 'Berachain extraction failed')
   }
 }

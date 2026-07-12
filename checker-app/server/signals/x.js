@@ -1,14 +1,13 @@
 import { fetchTimeout, ev, daysAgo, fmtDate } from '../util.js'
 import {
   X_RESULT_CACHE_ENABLED,
-  X_RESULT_CACHE_TTL_MS,
-  X_LAST_POST_CACHE_ENABLED,
-  X_LAST_POST_CACHE_TTL_MS,
   X_LAST_POST_AGE_DAYS,
-  X_STALE_POST_CACHE_TTL_MS,
   X_SYNDICATION_COOLDOWN_MS,
   X_SYNDICATION_INTERVAL_MS,
+  SIGNAL_FRESH_FETCH_MS,
+  SIGNAL_FRESH_FETCH_DAYS,
 } from '../config.js'
+import { recordXRateLimit } from '../rateLimitStatus.js'
 
 export function xHandleFromUrl(url) {
   const m = url.match(/(?:x\.com|twitter\.com)\/@?([\w]+)/i)
@@ -106,6 +105,10 @@ async function viaSyndication(handle, xState) {
     {},
     10000
   )
+  // Capture the live quota headers regardless of outcome (including 429) —
+  // this is a genuine live call, unlike a cache hit, so it's the only place
+  // that can tell the footer anything new about the current X quota.
+  await recordXRateLimit(res.headers)
   if (res.status === 429) {
     const retryAfter = res.headers.get('retry-after')
     const retrySeconds = Number(retryAfter)
@@ -247,16 +250,19 @@ export function followerEvidence(handle, result) {
   if (followers == null) {
     return metricEvidence('x-followers', 'info', 'X follower count unavailable', detail, 0)
   }
+  // X is one of the two primary "is this project alive at all" signals (with
+  // website liveness), so its deltas are weighted higher than secondary
+  // community signals like Discord/Telegram.
   if (followers >= 20000) {
-    return metricEvidence('x-followers', 'good', 'X established audience (20K+ followers)', detail, 8)
+    return metricEvidence('x-followers', 'good', 'X established audience (20K+ followers)', detail, 10)
   }
   if (followers >= 5000) {
-    return metricEvidence('x-followers', 'good', 'X decent audience (5K+ followers)', detail, 4)
+    return metricEvidence('x-followers', 'good', 'X decent audience (5K+ followers)', detail, 6)
   }
   if (followers >= 1000) {
-    return metricEvidence('x-followers', 'info', 'X small audience (1K+ followers)', detail, 2)
+    return metricEvidence('x-followers', 'info', 'X small audience (1K+ followers)', detail, 3)
   }
-  return metricEvidence('x-followers', 'warn', 'X tiny audience (<1K followers)', detail, -2)
+  return metricEvidence('x-followers', 'warn', 'X tiny audience (<1K followers)', detail, -4)
 }
 
 export function lastPostEvidence(handle, latestPost, unavailableDetail = null) {
@@ -275,18 +281,18 @@ export function lastPostEvidence(handle, latestPost, unavailableDetail = null) {
     return metricEvidence('x-last-post', 'info', 'X last post date invalid', `@${handle}`, 0)
   }
   if (age <= X_LAST_POST_AGE_DAYS.active) {
-    return metricEvidence('x-last-post', 'good', `X active (posted ≤${X_LAST_POST_AGE_DAYS.active}d)`, `@${handle} · ${fmtDate(latestPost)}`, 15)
+    return metricEvidence('x-last-post', 'good', `X active (posted ≤${X_LAST_POST_AGE_DAYS.active}d)`, `@${handle} · ${fmtDate(latestPost)}`, 20)
   }
   if (age <= X_LAST_POST_AGE_DAYS.recent) {
-    return metricEvidence('x-last-post', 'good', `X recent (posted ≤${X_LAST_POST_AGE_DAYS.recent}d)`, `@${handle} · ${fmtDate(latestPost)}`, 8)
+    return metricEvidence('x-last-post', 'good', `X recent (posted ≤${X_LAST_POST_AGE_DAYS.recent}d)`, `@${handle} · ${fmtDate(latestPost)}`, 12)
   }
   if (age <= X_LAST_POST_AGE_DAYS.quiet) {
-    return metricEvidence('x-last-post', 'warn', `X quiet (${X_LAST_POST_AGE_DAYS.recent + 1}–${X_LAST_POST_AGE_DAYS.quiet}d)`, `@${handle} · ${fmtDate(latestPost)}`, -5)
+    return metricEvidence('x-last-post', 'warn', `X quiet (${X_LAST_POST_AGE_DAYS.recent + 1}–${X_LAST_POST_AGE_DAYS.quiet}d)`, `@${handle} · ${fmtDate(latestPost)}`, -8)
   }
   if (age <= X_LAST_POST_AGE_DAYS.silent) {
-    return metricEvidence('x-last-post', 'bad', `X silent >${X_LAST_POST_AGE_DAYS.quiet}d — likely no progress`, `@${handle} · last post ${fmtDate(latestPost)}`, -18)
+    return metricEvidence('x-last-post', 'bad', `X silent >${X_LAST_POST_AGE_DAYS.quiet}d — likely no progress`, `@${handle} · last post ${fmtDate(latestPost)}`, -25)
   }
-  return metricEvidence('x-last-post', 'bad', `X silent >${X_LAST_POST_AGE_DAYS.silent}d — project likely abandoned`, `@${handle} · last post ${fmtDate(latestPost)}`, -25)
+  return metricEvidence('x-last-post', 'bad', `X silent >${X_LAST_POST_AGE_DAYS.silent}d — project likely abandoned`, `@${handle} · last post ${fmtDate(latestPost)}`, -32)
 }
 
 function unavailablePostSummary(result, attempts) {
@@ -363,36 +369,25 @@ export async function checkX(project, ctx) {
   if (!handle) return { facts, evidence: [ev('info', 'Could not parse X handle', project.x, 0)] }
   facts.xHandle = handle
 
+  // Rate-limit protection: this record (this exact handle) only gets a live
+  // API call if it's been more than SIGNAL_FRESH_FETCH_DAYS since its own
+  // last *successful* fetch — otherwise reuse the cached result outright and
+  // skip every live source below. Each handle's cache entry is independent.
   const cacheKey = `x:${handle.toLowerCase()}`
-  const cached = ctx.store?.get(cacheKey)
-  const profileCheckedAt = new Date(cached?.checkedAt ?? 0).getTime()
-  const postCheckedAt = new Date(cached?.postCheckedAt ?? cached?.checkedAt ?? 0).getTime()
-  const profileAge = Number.isNaN(profileCheckedAt) ? Infinity : Date.now() - profileCheckedAt
-  const cachedAge = Number.isNaN(postCheckedAt) ? Infinity : Date.now() - postCheckedAt
-  const recentProfileCached = X_RESULT_CACHE_ENABLED &&
-    cached?.result?.exists != null && profileAge < X_RESULT_CACHE_TTL_MS
-  const recentLastPostCached = X_LAST_POST_CACHE_ENABLED &&
-    Boolean(cached?.result?.latestPost) && cachedAge < X_LAST_POST_CACHE_TTL_MS
-  const freshProfileCached = recentProfileCached || recentLastPostCached
-  // Only a real, unexpired timestamp may suppress the timeline requests.
-  // Cached profile/follower data alone must not count as a post result.
-  const freshPostCached = recentLastPostCached
-  const staleCached = X_RESULT_CACHE_ENABLED &&
-    cached?.result?.latestPost && cachedAge < X_STALE_POST_CACHE_TTL_MS
-    ? cached.result
-    : null
+  const cached = ctx.store?.get(cacheKey) ?? null
+  const lastFetchedAt = cached?.checkedAt ? new Date(cached.checkedAt).getTime() : NaN
+  const cacheAgeMs = Number.isNaN(lastFetchedAt) ? Infinity : Date.now() - lastFetchedAt
+  const freshCache = X_RESULT_CACHE_ENABLED && Boolean(cached?.result) && cacheAgeMs < SIGNAL_FRESH_FETCH_MS
 
-  let profile = freshProfileCached ? profileSnapshot(cached.result) : null
-  let postResult = freshPostCached ? cached.result : null
-  let profileSource = freshProfileCached ? 'cache' : null
-  let postSource = freshPostCached ? 'cache' : null
+  let profile = freshCache ? profileSnapshot(cached.result) : null
+  let postResult = freshCache ? cached.result : null
+  let profileSource = freshCache ? 'cache' : null
+  let postSource = freshCache ? 'cache' : null
   const postAttempts = []
 
-  if (freshPostCached) {
+  if (freshCache) {
     postAttempts.push(attempt('cache', cached.result.latestPost ? 'success' : 'cached'))
-  }
-
-  if (!postResult) {
+  } else {
     // The official API needs a user ID, so its configured path starts with the
     // lightweight profile lookup. The default unauthenticated path skips that
     // request and lets syndication return profile + timeline data together.
@@ -471,6 +466,10 @@ export async function checkX(project, ctx) {
     }
   }
 
+  // If a live fetch was attempted but came back with no definitive answer,
+  // fall back to displaying the last known cached result (of any age) rather
+  // than reporting nothing — but this does *not* count as a fresh successful
+  // fetch, so the next run still retries live sources immediately.
   let result
   if (profile?.exists === false) {
     result = profile
@@ -478,10 +477,10 @@ export async function checkX(project, ctx) {
     result = { ...profile, ...postResult }
   } else if (postResult?.latestPost) {
     result = { ...profile, ...postResult }
-  } else if (staleCached && profile?.exists !== false) {
-    result = { ...staleCached, ...profile, ...postResult, latestPost: staleCached.latestPost }
+  } else if (!freshCache && cached?.result && profile?.exists !== false) {
+    result = { ...cached.result, ...profile, ...postResult, latestPost: cached.result.latestPost }
     postSource = 'stale-cache'
-    postAttempts.push(attempt('stale-cache', 'success', 'live timeline sources were unavailable'))
+    postAttempts.push(attempt('stale-cache', 'success', 'live X sources were unavailable; showing the last known result'))
   } else {
     result = { ...profile, ...postResult }
   }
@@ -501,13 +500,12 @@ export async function checkX(project, ctx) {
   facts.xPostSource = postSource
   facts.xSource = postSource || profileSource
 
-  if (ctx.store && result.exists != null && !recentLastPostCached) {
-    const livePost = result.latestPost && ['official-api', 'syndication', 'puppeteer'].includes(postSource)
-    ctx.store.set(cacheKey, {
-      result,
-      checkedAt: new Date().toISOString(),
-      postCheckedAt: livePost ? new Date().toISOString() : cached?.postCheckedAt ?? null,
-    })
+  // Only a genuinely live, definitive determination counts as a "successful
+  // fetch" that resets the SIGNAL_FRESH_FETCH_DAYS cooldown for this handle —
+  // a stale-cache fallback (live sources were unavailable) does not, so the
+  // very next run retries live sources instead of waiting out the window.
+  if (ctx.store && result.exists != null && !freshCache && postSource !== 'stale-cache') {
+    ctx.store.set(cacheKey, { result, checkedAt: new Date().toISOString() })
   }
 
   if (!result.exists) {
@@ -518,7 +516,7 @@ export async function checkX(project, ctx) {
         'bad',
         suspended ? 'X account suspended' : 'X account does not exist',
         `@${handle} · confirmed unavailable`,
-        suspended ? -25 : -20
+        suspended ? -30 : -26
       )
     )
     return { facts, evidence }
@@ -527,9 +525,9 @@ export async function checkX(project, ctx) {
   if (result.latestPost) {
     facts.xPostStatus = ['cache', 'stale-cache'].includes(postSource) ? 'cached' : 'available'
     if (postSource === 'cache') {
-      facts.xPostDetail = 'Using the existing last-post record; X network requests were skipped.'
+      facts.xPostDetail = `Using the existing last-post record (fetched within the last ${SIGNAL_FRESH_FETCH_DAYS} days); X network requests were skipped.`
     } else if (postSource === 'stale-cache') {
-      facts.xPostDetail = 'Live timeline sources were unavailable; using a last-post date cached within the past 7 days.'
+      facts.xPostDetail = 'Live X sources were unavailable this run; showing the last known last-post date.'
     }
   } else {
     const summary = postSource === 'cache'

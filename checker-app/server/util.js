@@ -19,13 +19,25 @@ export async function fetchTimeout(url, opts = {}, ms = 12000) {
   }
 }
 
+/**
+ * Also mirrors any newly-discovered .env values into process.env itself
+ * (never overwriting a value already set there) — some libraries (e.g. the
+ * Postgres client in server/db.js) read process.env directly rather than
+ * accepting an env object, so without this they'd only ever work in Vercel
+ * production (where the platform sets process.env for you), not local dev.
+ */
 export function loadEnv(dir) {
   const env = { ...process.env }
   try {
     const raw = readFileSync(join(dir, '.env'), 'utf8')
     for (const line of raw.split('\n')) {
       const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/i)
-      if (m && !line.trim().startsWith('#')) env[m[1]] = m[2].replace(/^["']|["']$/g, '')
+      if (m && !line.trim().startsWith('#')) {
+        const [, key, rawValue] = m
+        const value = rawValue.replace(/^["']|["']$/g, '')
+        env[key] = value
+        if (!(key in process.env)) process.env[key] = value
+      }
     }
   } catch { /* no .env file */ }
   return env

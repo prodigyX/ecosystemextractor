@@ -2,28 +2,27 @@
 // hunting through the signal implementations.
 export const BERACHAIN_DIRECTORY_URL = 'https://explore.berachain.com/'
 
-// Short cache for X existence/follower profile data. This never suppresses a
-// last-post lookup when the cached result has no last-post timestamp.
-export const X_RESULT_CACHE_ENABLED = true
-export const X_RESULT_CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
+// Rate-limit protection for X and GitHub: before calling either live API for
+// a given record (an X handle, or a GitHub owner/repo — see the `x:<handle>`
+// and `github:<owner>/<repo>` cache keys in server/signals/x.js and
+// server/signals/github.js), check that record's own last-*successful*-fetch
+// timestamp in the server-side store (server/store.js). Only make the live
+// call if it has been more than this many days since that record's last
+// successful fetch; otherwise reuse the cached result. This is the single,
+// per-record rule for both signals — replacing the previous separate
+// 1hr/7d/30d tiers.
+export const SIGNAL_FRESH_FETCH_DAYS = 5
+export const SIGNAL_FRESH_FETCH_MS = SIGNAL_FRESH_FETCH_DAYS * 24 * 60 * 60 * 1000
 
-// A successfully acquired last-post date is expensive and changes slowly.
-// While this is enabled, reuse it for 30 days without calling any X source.
-export const X_LAST_POST_CACHE_ENABLED = true
-export const X_LAST_POST_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
+export const X_RESULT_CACHE_ENABLED = true
+export const GITHUB_RESULT_CACHE_ENABLED = true
 
 // Activity age bands are expressed in days. Keep values in ascending order.
 export const X_LAST_POST_AGE_DAYS = Object.freeze({ active: 30, recent: 90, quiet: 180, silent: 365 })
 
-export const X_STALE_POST_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
-
 export const X_SYNDICATION_INTERVAL_MS = 10 * 1000
 export const X_SYNDICATION_COOLDOWN_MS = 15 * 60 * 1000
 
-// Reuse a successful GitHub repository/activity lookup to protect both
-// authenticated and public GitHub API rate limits.
-export const GITHUB_RESULT_CACHE_ENABLED = true
-export const GITHUB_RESULT_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
 export const GITHUB_PUSH_AGE_DAYS = Object.freeze({ active: 30, recent: 90, inactive: 365 })
 
 export const TELEGRAM_MESSAGE_AGE_DAYS = Object.freeze({ active: 30, recent: 90, inactive: 365 })

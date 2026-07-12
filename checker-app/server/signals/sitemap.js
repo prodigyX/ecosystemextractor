@@ -38,12 +38,14 @@ export async function checkSitemap(project, ctx = {}) {
         facts.lastPublished = latest.toISOString()
         facts.feedFound = path
         const age = daysAgo(latest)
+        // Sitemap/RSS freshness is a secondary signal, weighted below the
+        // primary website and X liveness signals.
         if (age <= SITEMAP_UPDATE_AGE_DAYS.recent) {
-          evidence.push(ev('good', `Site content updated within ${SITEMAP_UPDATE_AGE_DAYS.recent}d`, `${path} → ${fmtDate(latest)}`, 8))
+          evidence.push(ev('good', `Site content updated within ${SITEMAP_UPDATE_AGE_DAYS.recent}d`, `${path} → ${fmtDate(latest)}`, 4))
         } else if (age <= SITEMAP_UPDATE_AGE_DAYS.stale) {
-          evidence.push(ev('info', `Site content updated within ${SITEMAP_UPDATE_AGE_DAYS.stale}d`, `${path} → ${fmtDate(latest)}`, 2))
+          evidence.push(ev('info', `Site content updated within ${SITEMAP_UPDATE_AGE_DAYS.stale}d`, `${path} → ${fmtDate(latest)}`, 1))
         } else {
-          evidence.push(ev('warn', `Site content stale (>${SITEMAP_UPDATE_AGE_DAYS.stale}d)`, `${path} → ${fmtDate(latest)}`, -5))
+          evidence.push(ev('warn', `Site content stale (>${SITEMAP_UPDATE_AGE_DAYS.stale}d)`, `${path} → ${fmtDate(latest)}`, -3))
         }
         return { facts, evidence }
       }

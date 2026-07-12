@@ -47,7 +47,7 @@ export async function checkDomain(project) {
     const res = await fetchTimeout(`${base.replace(/\/$/, '')}/domain/${registrable}`, {}, 12000)
     if (res.status === 404) {
       // Registry says the domain isn't registered at all
-      evidence.push(ev('bad', 'Domain not registered', registrable, -15))
+      evidence.push(ev('bad', 'Domain not registered', registrable, -12))
       return { facts, evidence }
     }
     if (!res.ok) {
@@ -63,14 +63,16 @@ export async function checkDomain(project) {
     if (exp) {
       facts.domainExpiry = exp
       const left = daysUntil(exp)
+      // Domain registration is a secondary signal, weighted below the
+      // primary website and X liveness signals.
       if (left != null && left < 0) {
-        evidence.push(ev('bad', 'Domain expired', fmtDate(exp), -20))
+        evidence.push(ev('bad', 'Domain expired', fmtDate(exp), -15))
       } else if (left != null && left < 30) {
-        evidence.push(ev('warn', 'Domain expires within 30 days', fmtDate(exp), -8))
+        evidence.push(ev('warn', 'Domain expires within 30 days', fmtDate(exp), -5))
       } else if (left != null && left < 90) {
         evidence.push(ev('info', 'Domain expires within 90 days', fmtDate(exp), 0))
       } else {
-        evidence.push(ev('good', 'Domain registration healthy', `expires ${fmtDate(exp)}`, 5))
+        evidence.push(ev('good', 'Domain registration healthy', `expires ${fmtDate(exp)}`, 3))
       }
     } else {
       evidence.push(ev('info', 'Domain expiry not in RDAP data', registrable, 0))

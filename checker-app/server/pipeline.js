@@ -10,6 +10,7 @@ import { checkDefillama } from './signals/defillama.js'
 import { checkX, xHandleFromUrl } from './signals/x.js'
 import { domainOf, ev, daysAgo } from './util.js'
 import { SCORE_WEIGHTS, TELEGRAM_MESSAGE_AGE_DAYS } from './config.js'
+import { scrapeRenderedLinks } from './domScrape.js'
 
 const PROJECT_CONCURRENCY = 4
 const MAX_HISTORY_ENTRIES = 10
@@ -67,6 +68,7 @@ async function checkProject(project, shared, emit) {
     storeKey: domainOf(project.website) || project.name,
     xState: shared.xState,
     xTimelineQueue: shared.xTimelineQueue,
+    launchBrowser: shared.launchBrowser,
     html: null,
     finalUrl: null,
     links: {},
@@ -131,6 +133,19 @@ async function checkProject(project, shared, emit) {
   if (!ctx.links.discord && xResult.facts.xDiscordLink) ctx.links.discord = xResult.facts.xDiscordLink
   if (!ctx.links.telegram && xResult.facts.xTelegramLink) ctx.links.telegram = xResult.facts.xTelegramLink
   collect(contentResult)
+
+  // Last resort: the plain fetch()+X-bio chain above still found neither
+  // community link, but the site itself did respond (ctx.html present) —
+  // it may be a JS-rendered app (React/Next client components etc.) hiding
+  // its real content behind an empty HTML shell that a plain fetch can
+  // never see into (see server/domScrape.js). Only pays for a real browser
+  // render when it's actually needed, and never overwrites a link the
+  // cheaper sources already found.
+  if (ctx.html && ctx.launchBrowser && (!ctx.links.discord || !ctx.links.telegram)) {
+    const rendered = await scrapeRenderedLinks(ctx.finalUrl || project.website, ctx.launchBrowser)
+    if (!ctx.links.discord && rendered.discord) ctx.links.discord = rendered.discord
+    if (!ctx.links.telegram && rendered.telegram) ctx.links.telegram = rendered.telegram
+  }
 
   // Cross-signal: having just one of Discord/Telegram is normal and isn't
   // penalized by either signal on its own (see server/signals/discord.js,
@@ -227,12 +242,13 @@ function makeQueue(concurrency) {
  * Runs the full deep-check pipeline over all projects.
  * emit(event) is called with NDJSON-able progress events.
  */
-export async function runPipeline(projects, { env, store }, emit) {
+export async function runPipeline(projects, { env, store, launchBrowser }, emit) {
   // Profile lookups can run with the normal project concurrency. Only
   // timeline syndication is serialized/paced.
   const shared = {
     env,
     store,
+    launchBrowser,
     xTimelineQueue: makeQueue(1),
     xState: { syndicationBlocked: false },
   }

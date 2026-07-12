@@ -272,7 +272,7 @@ function berachainExtractPlugin() {
           const store = createStore()
           const emit = (event) => res.write(JSON.stringify(event) + '\n')
 
-          await runPipeline(projects, { env, store }, emit)
+          await runPipeline(projects, { env, store, launchBrowser }, emit)
           res.end()
         } catch (err) {
           if (!res.headersSent) {

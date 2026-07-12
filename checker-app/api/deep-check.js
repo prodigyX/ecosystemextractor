@@ -3,6 +3,7 @@ import { runPipeline } from '../server/pipeline.js'
 import { createStore } from '../server/store.js'
 import { getClientIp, isSameOrigin, readJsonBody, sanitizeProjects, sendJson } from '../server/api-helpers.js'
 import { isRateLimited } from '../server/rateLimiter.js'
+import { launchServerlessBrowser } from '../server/serverless-browser.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -40,7 +41,7 @@ export default async function handler(req, res) {
 
     await runPipeline(
       projects,
-      { env: process.env, store },
+      { env: process.env, store, launchBrowser: launchServerlessBrowser },
       emit
     )
     if (!res.writableEnded) res.end()

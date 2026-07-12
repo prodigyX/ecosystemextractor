@@ -30,6 +30,23 @@ function stripTags(html) {
     .toLowerCase()
 }
 
+/**
+ * Classifies a single absolute URL as one of our four trackable link types,
+ * or null. Exported so server/domScrape.js's headless-browser fallback (for
+ * JS-rendered sites a plain fetch can't see into) matches links by the exact
+ * same rule as the primary scrape below — one source of truth either way.
+ */
+export function classifyLink(url) {
+  if (/github\.com\/[\w.-]+/i.test(url)) return 'github'
+  if (/(discord\.gg|discord\.com\/invite)\/[\w-]+/i.test(url)) return 'discord'
+  if (/t\.me\/[\w+]+/i.test(url)) return 'telegram'
+  // Reuses x.js's own handle parser (and its home/search/intent/etc.
+  // exclusion list) so a link is only accepted here if checkX would
+  // actually treat it as a real profile — same rule, one source of truth.
+  if (xHandleFromUrl(url)) return 'x'
+  return null
+}
+
 function findLinks(html, baseUrl) {
   const links = { github: null, discord: null, telegram: null, x: null }
   const hrefs = [...html.matchAll(/href=["']([^"']+)["']/gi)].map((m) => m[1])
@@ -40,13 +57,8 @@ function findLinks(html, baseUrl) {
     } catch {
       continue
     }
-    if (!links.github && /github\.com\/[\w.-]+/i.test(url)) links.github = url
-    if (!links.discord && /(discord\.gg|discord\.com\/invite)\/[\w-]+/i.test(url)) links.discord = url
-    if (!links.telegram && /t\.me\/[\w+]+/i.test(url)) links.telegram = url
-    // Reuses x.js's own handle parser (and its home/search/intent/etc.
-    // exclusion list) so a link is only accepted here if checkX would
-    // actually treat it as a real profile — same rule, one source of truth.
-    if (!links.x && xHandleFromUrl(url)) links.x = url
+    const kind = classifyLink(url)
+    if (kind && !links[kind]) links[kind] = url
   }
   return links
 }

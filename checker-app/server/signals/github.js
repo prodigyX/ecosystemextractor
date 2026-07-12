@@ -49,7 +49,7 @@ export async function checkGithub(project, ctx) {
   const parsed = parseGithubUrl(link)
   if (!parsed) return { facts, evidence: [ev('info', 'Unrecognized GitHub URL', link, 0)] }
   const cacheKey = `github:${parsed.owner.toLowerCase()}/${parsed.repo?.toLowerCase() ?? '*'}`
-  const cached = ctx.store?.get(cacheKey)
+  const cached = await ctx.store?.get(cacheKey)
   const checkedAt = new Date(cached?.checkedAt ?? 0).getTime()
   const cacheAge = Number.isNaN(checkedAt) ? Infinity : Date.now() - checkedAt
   if (
@@ -86,7 +86,7 @@ export async function checkGithub(project, ctx) {
     facts.archived = repoData.archived === true
     facts.lastPush = repoData.pushed_at
     facts.githubSource = 'api'
-    ctx.store?.set(cacheKey, {
+    await ctx.store?.set(cacheKey, {
       checkedAt: new Date().toISOString(),
       result: { repo: facts.repo, archived: facts.archived, lastPush: facts.lastPush },
     })

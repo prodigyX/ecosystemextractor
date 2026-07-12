@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import puppeteer from 'puppeteer-core'
 import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
+import { dirname } from 'node:path'
 import { runPipeline } from './server/pipeline.js'
 import { createStore } from './server/store.js'
 import { loadEnv } from './server/util.js'
@@ -233,7 +233,7 @@ function berachainExtractPlugin() {
           res.setHeader('X-Accel-Buffering', 'no')
 
           const env = loadEnv(__dirname)
-          const store = createStore(join(__dirname, '.checker-store.json'))
+          const store = createStore()
           const emit = (event) => res.write(JSON.stringify(event) + '\n')
 
           await runPipeline(projects, { env, store, launchBrowser }, emit)

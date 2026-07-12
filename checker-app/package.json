@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
     "@sparticuz/chromium": "^149.0.0",
     "puppeteer-core": "^25.1.0",
     "react": "^19.2.6",

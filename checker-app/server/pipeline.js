@@ -7,7 +7,7 @@ import { checkGithub } from './signals/github.js'
 import { checkDiscord } from './signals/discord.js'
 import { checkTelegram } from './signals/telegram.js'
 import { checkDefillama } from './signals/defillama.js'
-import { checkX } from './signals/x.js'
+import { checkX, xHandleFromUrl } from './signals/x.js'
 import { domainOf } from './util.js'
 
 const PROJECT_CONCURRENCY = 4
@@ -18,12 +18,12 @@ const MAX_HISTORY_ENTRIES = 50
  * domain, falling back to name) and returns the updated history array.
  * Real data only: one entry per actual Deep Check run, not synthetic points.
  */
-function recordScoreHistory(store, storeKey, score, verdict) {
+async function recordScoreHistory(store, storeKey, score, verdict) {
   if (!store) return []
   const key = `history:${storeKey}`
-  const prev = store.get(key) ?? []
+  const prev = (await store.get(key)) ?? []
   const next = [...prev, { ts: new Date().toISOString(), score, verdict }].slice(-MAX_HISTORY_ENTRIES)
-  store.set(key, next)
+  await store.set(key, next)
   return next
 }
 
@@ -111,7 +111,7 @@ async function checkProject(project, shared, emit) {
   const order = { bad: 0, warn: 1, good: 2, info: 3 }
   allEvidence.sort((a, b) => order[a.level] - order[b.level])
 
-  const history = recordScoreHistory(shared.store, ctx.storeKey, score, verdict)
+  const history = await recordScoreHistory(shared.store, ctx.storeKey, score, verdict)
 
   emit({
     type: 'project-done',
@@ -172,6 +172,18 @@ export async function runPipeline(projects, { env, store, launchBrowser }, emit)
   }
   const projectQueue = makeQueue(PROJECT_CONCURRENCY)
 
+  // X's cache key is derivable from every project's `x` field up front, so
+  // it can be bulk-loaded in one query before the run starts — unlike
+  // GitHub's cache key, which is only discovered at runtime by scraping
+  // each project's site for a GitHub link (see server/store.js).
+  if (store) {
+    const xKeys = projects
+      .map((p) => p.x && xHandleFromUrl(p.x))
+      .filter(Boolean)
+      .map((handle) => `x:${handle.toLowerCase()}`)
+    await store.preload([...new Set(xKeys)])
+  }
+
   emit({ type: 'start', total: projects.length })
   await Promise.all(
     projects.map((p) =>
@@ -183,7 +195,6 @@ export async function runPipeline(projects, { env, store, launchBrowser }, emit)
     )
   )
 
-  store?.save()
   if (browserPromise) {
     const browser = await browserPromise
     await browser?.close().catch(() => {})

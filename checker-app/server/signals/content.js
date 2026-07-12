@@ -47,7 +47,7 @@ function findLinks(html, baseUrl) {
  * Analyzes homepage HTML: dead/migration keywords, parked-domain signs,
  * copyright year, social link discovery, and content hash vs stored baseline.
  */
-export function checkContent(project, ctx) {
+export async function checkContent(project, ctx) {
   const evidence = []
   const facts = { links: {}, copyrightYear: null, contentHash: null, contentChanged: null }
   const html = ctx.html
@@ -93,7 +93,7 @@ export function checkContent(project, ctx) {
   facts.contentHash = createHash('sha256').update(text).digest('hex').slice(0, 16)
   if (ctx.store) {
     const key = ctx.storeKey
-    const prev = ctx.store.get(key)
+    const prev = await ctx.store.get(key)
     const nowIso = new Date().toISOString()
     if (prev?.hash) {
       if (prev.hash === facts.contentHash) {
@@ -102,14 +102,14 @@ export function checkContent(project, ctx) {
         if (since) {
           evidence.push(ev('info', 'Homepage unchanged since', fmtDate(since), 0))
         }
-        ctx.store.set(key, { ...prev, lastChecked: nowIso })
+        await ctx.store.set(key, { ...prev, lastChecked: nowIso })
       } else {
         facts.contentChanged = true
         evidence.push(ev('good', 'Homepage content changed since last check', null, 3))
-        ctx.store.set(key, { ...prev, hash: facts.contentHash, lastChanged: nowIso, lastChecked: nowIso })
+        await ctx.store.set(key, { ...prev, hash: facts.contentHash, lastChanged: nowIso, lastChecked: nowIso })
       }
     } else {
-      ctx.store.set(key, { hash: facts.contentHash, firstSeen: nowIso, lastChecked: nowIso })
+      await ctx.store.set(key, { hash: facts.contentHash, firstSeen: nowIso, lastChecked: nowIso })
       evidence.push(ev('info', 'Content baseline saved (first check)', null, 0))
     }
   }

@@ -23,8 +23,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 // The unauthenticated syndication endpoint throttles sustained batches. Keeping
 // requests to about six per minute lets more projects complete before that
 // happens, while the optional official API below avoids this limit entirely.
+// Pacing state is process-wide (harmless: worst case is an extra short wait),
+// but the 429 cooldown itself lives only on the per-run xState below. A
+// module-level cooldown would survive on a warm serverless instance across
+// unrelated requests and silently skip the network call on a fresh run/IP —
+// and "Clear check cache" would not reset it either, since it's separate
+// from the signal-result store.
 let nextAllowedAt = 0
-let syndicationBlockedUntil = 0
 async function paced() {
   const wait = nextAllowedAt - Date.now()
   nextAllowedAt = Math.max(Date.now(), nextAllowedAt) + X_SYNDICATION_INTERVAL_MS
@@ -90,7 +95,7 @@ async function viaOfficialX(userId, token) {
 
 /** Unauthenticated Twitter syndication timeline. */
 async function viaSyndication(handle, xState) {
-  const blockedUntil = Math.max(syndicationBlockedUntil, xState?.syndicationBlockedUntil ?? 0)
+  const blockedUntil = xState?.syndicationBlockedUntil ?? 0
   if (xState?.syndicationBlocked || blockedUntil > Date.now()) {
     const detail = blockedUntil > Date.now()
       ? `cooldown until ${new Date(blockedUntil).toISOString()}`
@@ -112,10 +117,9 @@ async function viaSyndication(handle, xState) {
     const cooldownMs = Number.isFinite(retrySeconds) && retrySeconds > 0
       ? retrySeconds * 1000
       : X_SYNDICATION_COOLDOWN_MS
-    syndicationBlockedUntil = Date.now() + cooldownMs
     if (xState) {
       xState.syndicationBlocked = true
-      xState.syndicationBlockedUntil = syndicationBlockedUntil
+      xState.syndicationBlockedUntil = Date.now() + cooldownMs
     }
     return {
       result: null,
@@ -203,6 +207,27 @@ async function viaPuppeteer(handle, getBrowser) {
         .filter(Boolean)
         .map((date) => new Date(date).getTime())
         .filter((time) => !Number.isNaN(time) && time <= Date.now())
+
+      // X sometimes serves a stripped page with no data-testid/<time> markup
+      // at all, even though the tweets themselves are in the DOM. Each own
+      // post's /status/{id} link carries a Snowflake ID, which encodes its
+      // creation time directly (id >> 22) + the Twitter epoch, so the date
+      // can be recovered without relying on any rendered timestamp element.
+      // Only links under this handle's own path count, so a repost of
+      // someone else's newer tweet can't be mistaken for this account's post.
+      const TWITTER_EPOCH = 1288834974657n
+      const ownStatusPattern = new RegExp(`^/${h}/status/(\\d+)`, 'i')
+      for (const a of document.querySelectorAll('a[href*="/status/"]')) {
+        const match = (a.getAttribute('href') || '').match(ownStatusPattern)
+        if (!match) continue
+        try {
+          const ms = Number((BigInt(match[1]) >> 22n) + TWITTER_EPOCH)
+          if (!Number.isNaN(ms) && ms <= Date.now()) dates.push(ms)
+        } catch {
+          // Malformed/non-numeric id; skip it.
+        }
+      }
+
       const protectedPosts = /posts are protected/i.test(body)
       const noPosts = /hasn.t posted/i.test(body)
       return {
@@ -364,7 +389,7 @@ export async function checkX(project, ctx) {
   facts.xHandle = handle
 
   const cacheKey = `x:${handle.toLowerCase()}`
-  const cached = ctx.store?.get(cacheKey)
+  const cached = await ctx.store?.get(cacheKey)
   const profileCheckedAt = new Date(cached?.checkedAt ?? 0).getTime()
   const postCheckedAt = new Date(cached?.postCheckedAt ?? cached?.checkedAt ?? 0).getTime()
   const profileAge = Number.isNaN(profileCheckedAt) ? Infinity : Date.now() - profileCheckedAt
@@ -503,7 +528,7 @@ export async function checkX(project, ctx) {
 
   if (ctx.store && result.exists != null && !recentLastPostCached) {
     const livePost = result.latestPost && ['official-api', 'syndication', 'puppeteer'].includes(postSource)
-    ctx.store.set(cacheKey, {
+    await ctx.store.set(cacheKey, {
       result,
       checkedAt: new Date().toISOString(),
       postCheckedAt: livePost ? new Date().toISOString() : cached?.postCheckedAt ?? null,

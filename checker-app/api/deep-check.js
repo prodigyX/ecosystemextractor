@@ -25,9 +25,9 @@ export default async function handler(req, res) {
     res.setHeader('X-Accel-Buffering', 'no')
     res.flushHeaders?.()
 
-    // Vercel only guarantees writable disk space under /tmp. This store is a
-    // warm-instance cache; durable run history remains in browser localStorage.
-    const store = createStore('/tmp/ecosystem-checker-store.json')
+    // Postgres-backed (see server/store.js) — durable across restarts and
+    // shared across every serverless instance, unlike a /tmp-file cache.
+    const store = createStore()
     const emit = (event) => {
       if (!res.writableEnded) res.write(`${JSON.stringify(event)}\n`)
     }

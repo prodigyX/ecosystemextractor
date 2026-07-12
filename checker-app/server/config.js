@@ -24,6 +24,12 @@ export const SIGNAL_FRESH_FETCH_MS = SIGNAL_FRESH_FETCH_DAYS * 24 * 60 * 60 * 10
 export const X_FALLBACK_REFETCH_DAYS = 7
 export const X_FALLBACK_REFETCH_MS = X_FALLBACK_REFETCH_DAYS * 24 * 60 * 60 * 1000
 
+// Same durable-fallback pattern for GitHub (server/githubFallback.js), but
+// with a much shorter floor: GitHub's API is reliable and has a generous
+// quota, so there's little reason to withhold a refetch as long as X needs.
+export const GITHUB_FALLBACK_REFETCH_DAYS = 1
+export const GITHUB_FALLBACK_REFETCH_MS = GITHUB_FALLBACK_REFETCH_DAYS * 24 * 60 * 60 * 1000
+
 export const X_RESULT_CACHE_ENABLED = true
 export const GITHUB_RESULT_CACHE_ENABLED = true
 

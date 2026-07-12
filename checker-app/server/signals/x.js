@@ -227,7 +227,25 @@ function freshnessTag(postSource) {
   return ''
 }
 
-export function lastPostEvidence(handle, latestPost, postSource, unavailableDetail = null) {
+/**
+ * " · last fetched <when> · next fetch due <when>" suffix so a cached/fallback
+ * date's own freshness is visible right on the evidence line, not just
+ * inferred from the "(cached)"/"(fallback)" tag. `fetchedAt` is when postSource's
+ * underlying record was actually written (signal_cache's checkedAt, x_fallback's
+ * fetchedAt, or "now" for a live call this run).
+ */
+function freshnessDetail(postSource, fetchedAt) {
+  if (!fetchedAt) return ''
+  const fetchedMs = new Date(fetchedAt).getTime()
+  if (Number.isNaN(fetchedMs)) return ''
+  if (postSource === 'stale-cache') {
+    return ` · last fetched ${fmtDateTime(fetchedMs)} · next fetch: retried live on the next run`
+  }
+  const windowMs = postSource === 'x-fallback' ? X_FALLBACK_REFETCH_MS : SIGNAL_FRESH_FETCH_MS
+  return ` · last fetched ${fmtDateTime(fetchedMs)} · next fetch due ${fmtDateTime(fetchedMs + windowMs)}`
+}
+
+export function lastPostEvidence(handle, latestPost, postSource, unavailableDetail = null, fetchedAt = null) {
   if (!latestPost) {
     return metricEvidence(
       'x-last-post',
@@ -239,23 +257,24 @@ export function lastPostEvidence(handle, latestPost, postSource, unavailableDeta
   }
 
   const tag = freshnessTag(postSource)
+  const freshness = freshnessDetail(postSource, fetchedAt)
   const age = daysAgo(latestPost)
   if (age == null) {
     return metricEvidence('x-last-post', 'info', 'X last post date invalid', `@${handle}`, 0)
   }
   if (age <= X_LAST_POST_AGE_DAYS.active) {
-    return metricEvidence('x-last-post', 'good', `X active (posted ≤${X_LAST_POST_AGE_DAYS.active}d)`, `@${handle} · ${fmtDate(latestPost)}${tag}`, 20)
+    return metricEvidence('x-last-post', 'good', `X active (posted ≤${X_LAST_POST_AGE_DAYS.active}d)`, `@${handle} · ${fmtDate(latestPost)}${tag}${freshness}`, 20)
   }
   if (age <= X_LAST_POST_AGE_DAYS.recent) {
-    return metricEvidence('x-last-post', 'good', `X recent (posted ≤${X_LAST_POST_AGE_DAYS.recent}d)`, `@${handle} · ${fmtDate(latestPost)}${tag}`, 12)
+    return metricEvidence('x-last-post', 'good', `X recent (posted ≤${X_LAST_POST_AGE_DAYS.recent}d)`, `@${handle} · ${fmtDate(latestPost)}${tag}${freshness}`, 12)
   }
   if (age <= X_LAST_POST_AGE_DAYS.quiet) {
-    return metricEvidence('x-last-post', 'warn', `X quiet (${X_LAST_POST_AGE_DAYS.recent + 1}–${X_LAST_POST_AGE_DAYS.quiet}d)`, `@${handle} · ${fmtDate(latestPost)}${tag}`, -8)
+    return metricEvidence('x-last-post', 'warn', `X quiet (${X_LAST_POST_AGE_DAYS.recent + 1}–${X_LAST_POST_AGE_DAYS.quiet}d)`, `@${handle} · ${fmtDate(latestPost)}${tag}${freshness}`, -8)
   }
   if (age <= X_LAST_POST_AGE_DAYS.silent) {
-    return metricEvidence('x-last-post', 'bad', `X silent >${X_LAST_POST_AGE_DAYS.quiet}d — likely no progress`, `@${handle} · last post ${fmtDate(latestPost)}${tag}`, -25)
+    return metricEvidence('x-last-post', 'bad', `X silent >${X_LAST_POST_AGE_DAYS.quiet}d — likely no progress`, `@${handle} · last post ${fmtDate(latestPost)}${tag}${freshness}`, -25)
   }
-  return metricEvidence('x-last-post', 'bad', `X silent >${X_LAST_POST_AGE_DAYS.silent}d — project likely abandoned`, `@${handle} · last post ${fmtDate(latestPost)}${tag}`, -32)
+  return metricEvidence('x-last-post', 'bad', `X silent >${X_LAST_POST_AGE_DAYS.silent}d — project likely abandoned`, `@${handle} · last post ${fmtDate(latestPost)}${tag}${freshness}`, -32)
 }
 
 function unavailablePostSummary(result, attempts) {
@@ -493,8 +512,9 @@ export async function checkX(project, ctx) {
   // fetch, just a replay of a possibly-days-old result) — so the very next
   // run still retries live sources instead of waiting out either window.
   const isLiveResult = postSource !== 'stale-cache' && postSource !== 'x-fallback'
+  const checkedAtIso = new Date().toISOString()
   if (ctx.store && result.exists != null && !freshCache && isLiveResult) {
-    await ctx.store.set(cacheKey, { result, postSource, checkedAt: new Date().toISOString() })
+    await ctx.store.set(cacheKey, { result, postSource, checkedAt: checkedAtIso })
   }
 
   // The durable fallback (server/xFallback.js) only ever moves forward on a
@@ -542,7 +562,10 @@ export async function checkX(project, ctx) {
   // Audience size and posting recency are deliberately independent score
   // entries. A large but abandoned account (or a small active one) now shows
   // both facts and receives both deltas instead of one replacing the other.
+  const evidenceFetchedAt = postSource === 'x-fallback' ? fallback?.fetchedAt
+    : postSource === 'official-api' || postSource === 'syndication' ? checkedAtIso
+    : cached?.checkedAt ?? null
   evidence.push(followerEvidence(handle, result))
-  evidence.push(lastPostEvidence(handle, result.latestPost, postSource, facts.xPostDetail))
+  evidence.push(lastPostEvidence(handle, result.latestPost, postSource, facts.xPostDetail, evidenceFetchedAt))
   return { facts, evidence }
 }

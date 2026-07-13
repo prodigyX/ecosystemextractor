@@ -21,6 +21,7 @@ import { HistoryModal } from '../features/saved-runs/HistoryModal.jsx'
 import { useFavorites } from '../features/favorites/useFavorites.js'
 import { downloadCsv } from '../services/csvExportService.js'
 import { downloadJson } from '../services/jsonExportService.js'
+import { downloadExtractWithSocials } from '../services/extractExportService.js'
 
 const DEFAULT_SORT = { key: 'project', direction: 'asc' }
 
@@ -298,6 +299,7 @@ export function DashboardPage() {
         onRunNewCheck={handleRunNewCheck}
         onDownloadCsv={() => downloadCsv(projectsState.projects, deepCheck.deep)}
         onDownloadJson={() => downloadJson(projectsState.projects, deepCheck.deep)}
+        onDownloadExtract={() => downloadExtractWithSocials(projectsState.projects, deepCheck.deep)}
         onClearCache={() => setClearCacheModalOpen(true)}
         hasCheckResults={hasCheckResults}
         busy={busy}

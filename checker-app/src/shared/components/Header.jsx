@@ -21,6 +21,7 @@ import { fmtSavedAt } from '../lib/formatters.js'
  *   onRunNewCheck: () => void,
  *   onDownloadCsv: () => void,
  *   onDownloadJson: () => void,
+ *   onDownloadExtract: () => void,
  *   onClearCache: () => void,
  *   hasCheckResults: boolean,
  *   busy: boolean,
@@ -46,6 +47,7 @@ export function Header({
   onRunNewCheck,
   onDownloadCsv,
   onDownloadJson,
+  onDownloadExtract,
   onClearCache,
   hasCheckResults,
   busy,
@@ -118,6 +120,16 @@ export function Header({
         {hasProjects && hasCheckResults && (
           <button className="btn btn-secondary" onClick={onDownloadJson} disabled={busy}>
             <span aria-hidden="true">↓</span> Export JSON
+          </button>
+        )}
+        {hasProjects && hasCheckResults && (
+          <button
+            className="btn btn-secondary"
+            onClick={onDownloadExtract}
+            disabled={busy}
+            title="Re-export the project list in the source extract format, with any Discord/Telegram/GitHub links the check found added in"
+          >
+            <span aria-hidden="true">↓</span> Export Extract + Socials
           </button>
         )}
         {hasProjects && (

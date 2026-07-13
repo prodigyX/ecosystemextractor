@@ -231,6 +231,13 @@ async function checkProject(project, shared, emit) {
     }
   }
 
+  // content.js's own facts.links (merged into allFacts above) only reflects
+  // its own homepage scrape — ctx.links has since been topped up with
+  // whatever the X-bio/Linktree and rendered-page fallbacks found beyond
+  // that. Re-sync so the emitted facts (and anything exporting from them)
+  // reflect the final, fully-merged link set, not just the first source.
+  allFacts.links = ctx.links
+
   const { score, verdict } = scoreVerdict(allEvidence)
   // Group by signal first (in a fixed order, matching the category grouping
   // in src/shared/domain/scoring.js's CATEGORIES) so a signal's own multiple
